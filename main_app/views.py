@@ -10,8 +10,8 @@ from main_app.models import (StudentDetails, TeacherDetails, ParentsDetails, Dri
 class CreateStudent(APIView):
 
     def post(self, request, *args, **kwargs):
-        tutorial_data = JSONParser().parse(request)
-        tutorial_serializer = StudentDetailsSerializer(data=tutorial_data)
+        data = JSONParser().parse(request)
+        tutorial_serializer = StudentDetailsSerializer(data=data)
         if tutorial_serializer.is_valid():
             tutorial_serializer.save()
             return JsonResponse(tutorial_serializer.data, status=status.HTTP_201_CREATED)
@@ -19,27 +19,30 @@ class CreateStudent(APIView):
 
 
 class SearchStudent(APIView):
-
+    """
+    ?name=<value>
+    """
     def get(self, request):
         tutorials = StudentDetails.objects.all()
 
-        title = request.query_params.get('title', None)
-        if title is not None:
-            tutorials = tutorials.filter(title__icontains=title)
+        name = request.query_params.get('name', None)
+        if name is not None:
+            tutorials = StudentDetails.objects.filter(student_name__icontains=name)
 
-        tutorials_serializer = DriverDetailsSerializer(tutorials, many=True)
+        tutorials_serializer = StudentDetailsSerializer(tutorials, many=True)
         return JsonResponse(tutorials_serializer.data, safe=False)
+        # 'safe=False' for objects serialization
 
 
 class DeleteStudent(APIView):
 
-    def delete(self, request, pk):
+    def delete(self, request):
 
-        try:
-            tutorial = StudentDetails.objects.get(pk=pk).delete()
+        name = request.query_params.get('name', None)
+        delete_value = StudentDetails.objects.filter(student_name=name).delete()
+        if delete_value[0]:
             return JsonResponse({'message': 'Tutorial was deleted successfully!'}, status=status.HTTP_204_NO_CONTENT)
-        except StudentDetails.DoesNotExist:
-            return JsonResponse({'message': 'The tutorial does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        return JsonResponse({'message': 'The tutorial does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
 
 class CreateParent(APIView):
