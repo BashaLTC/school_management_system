@@ -18,9 +18,8 @@ class StudentDetails(models.Model):
 
 
 class ParentsDetails(models.Model):
-    parent_name = models.CharField(max_length=50)
-    student_name = models.CharField(max_length=50)
-    section = models.CharField(max_length=20)
+    parent_name = models.ForeignKey(StudentDetails, db_column='parent_name', related_name='+', on_delete=models.PROTECT)
+    student_name = models.ForeignKey(StudentDetails, db_column='student_name', on_delete=models.PROTECT)
     age = models.IntegerField()
     blood_group = models.CharField(max_length=10)
     educational_qualification = models.CharField(max_length=50)
