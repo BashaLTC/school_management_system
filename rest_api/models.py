@@ -20,7 +20,6 @@ class StudentDetails(models.Model):
 class ParentsDetails(models.Model):
     parent_name = models.CharField(max_length=50)
     student_name = models.CharField(max_length=50)
-    section = models.CharField(max_length=20)
     age = models.IntegerField()
     blood_group = models.CharField(max_length=10)
     educational_qualification = models.CharField(max_length=50)
@@ -51,7 +50,6 @@ class DriverDetails(models.Model):
     age = models.IntegerField()
     phone_number = models.CharField(max_length=15)
     address = models.CharField(max_length=50)
-    subject = models.CharField(max_length=20)
     lic_no = models.CharField(max_length=20)
     experience = models.IntegerField()
     complaints = models.CharField(max_length=100)
