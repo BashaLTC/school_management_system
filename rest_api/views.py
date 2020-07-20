@@ -3,8 +3,8 @@ from rest_framework.views import APIView
 from rest_framework.parsers import JSONParser
 from django.http.response import JsonResponse
 
-from main_app.serializers import (StudentDetailsSerializer, TeacherDetailsSerializer, ParentsDetailsSerializer, DriverDetailsSerializer)
-from main_app.models import (StudentDetails, TeacherDetails, ParentsDetails, DriverDetails)
+from rest_api.serializers import (StudentDetailsSerializer, TeacherDetailsSerializer, ParentsDetailsSerializer, DriverDetailsSerializer)
+from rest_api.models import (StudentDetails, TeacherDetails, ParentsDetails, DriverDetails)
 
 
 class CreateStudent(APIView):

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from main_app.models import (StudentDetails, ParentsDetails, TeacherDetails, DriverDetails)
+from rest_api.models import (StudentDetails, ParentsDetails, TeacherDetails, DriverDetails)
 
 
 class StudentDetailsSerializer(serializers.ModelSerializer):

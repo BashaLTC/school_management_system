@@ -1,5 +1,5 @@
 from django.urls import (path, re_path)
-from main_app.views import (CreateStudent, SearchStudent, DeleteStudent, CreateParent, SearchParent, DeleteParent, CreateTeacher, SearchTeacher, DeleteTeacher, CreateDriver,
+from rest_api.views import (CreateStudent, SearchStudent, DeleteStudent, CreateParent, SearchParent, DeleteParent, CreateTeacher, SearchTeacher, DeleteTeacher, CreateDriver,
                             SearchDriver, DeleteDriver)
 from rest_framework.urlpatterns import format_suffix_patterns
 
