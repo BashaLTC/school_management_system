@@ -1,0 +1,8 @@
+dicttoxml==1.7.4
+Django==3.0.8
+django-cors-headers==3.4.0
+django-rest-framework==0.1.0
+djangorestframework==3.11.0
+djangorestframework-xml==2.0.0
+ipython==7.16.1
+xmltodict==0.12.0
