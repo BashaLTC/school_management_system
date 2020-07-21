@@ -141,3 +141,4 @@ REST_FRAMEWORK = {
 
 
 MAX_QUERY_RESULT_LIMIT = 50
+XML_LOCATION = BASE_DIR + '/utils/xml_responses/'

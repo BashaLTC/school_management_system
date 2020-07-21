@@ -1,19 +1,15 @@
-import lxml.etree as ET
-from xmltodict import parse as xml_to_dict_parse
-from dicttoxml import dicttoxml
+
 from django.views import View
-
+from dicttoxml import dicttoxml
 from rest_framework import status
-from rest_framework.views import APIView
-from django.http.response import JsonResponse, HttpResponse
-from django.shortcuts import render
+from xmltodict import parse as xml_to_dict_parse
 from django.core.files.temp import NamedTemporaryFile
+from django.http.response import JsonResponse, HttpResponse
 
-from rest_framework_xml.parsers import XMLParser
-from rest_framework_xml.renderers import XMLRenderer
-from school_management_system.settings import MAX_QUERY_RESULT_LIMIT
-from rest_api.serializers import (StudentDetailsSerializer, TeacherDetailsSerializer, ParentsDetailsSerializer, DriverDetailsSerializer)
+from utils.util import decide_the_message
+from school_management_system.settings import (MAX_QUERY_RESULT_LIMIT, XML_LOCATION)
 from rest_api.models import (StudentDetails, TeacherDetails, ParentsDetails, DriverDetails)
+from rest_api.serializers import (StudentDetailsSerializer, TeacherDetailsSerializer, ParentsDetailsSerializer, DriverDetailsSerializer)
 
 
 class CreateStudent(View):
@@ -22,20 +18,35 @@ class CreateStudent(View):
         super().__init__(*args, **kwargs)
 
     def post(self, request):
-
         data = request.body.decode('utf-8')
         xml_data = {i: j for i, j in xml_to_dict_parse(data).get('data').items()}
         student_serializer = StudentDetailsSerializer(data=xml_data)
         if student_serializer.is_valid():
             student_serializer.save()
-            return JsonResponse(student_serializer.data, status=status.HTTP_201_CREATED)
-        return JsonResponse(student_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            success_message = decide_the_message(student_serializer.data, open(XML_LOCATION + 'created.xml').read())
+            return HttpResponse(success_message, status=status.HTTP_201_CREATED)
+        error_message = decide_the_message(student_serializer.errors, open(XML_LOCATION + 'not_created.xml').read())
+        return HttpResponse(error_message, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request):
+        data = request.body.decode('utf-8')
+        xml_data = {i: j for i, j in xml_to_dict_parse(data).get('data').items()}
+        student_serializer = StudentDetailsSerializer(data=xml_data)
+        if student_serializer.is_valid():
+            student_serializer.save()
+            success_message = decide_the_message(student_serializer.data, open(XML_LOCATION + 'created.xml').read())
+            return HttpResponse(success_message, status=status.HTTP_201_CREATED)
+        error_message = decide_the_message(student_serializer.errors, open(XML_LOCATION + 'not_created.xml').read())
+        return HttpResponse(error_message, status=status.HTTP_400_BAD_REQUEST)
 
 
 class SearchStudent(View):
     """
     ?name=<value>
     """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def get(self, request):
         student_details = StudentDetails.objects.all()[:MAX_QUERY_RESULT_LIMIT].values()
@@ -51,22 +62,25 @@ class SearchStudent(View):
         file_name = NamedTemporaryFile(delete=True)
         with open(file_name.name, 'w') as f:
             f.write(dict_xml_data)
-        print(file_name.name)
 
         return HttpResponse(open(file_name.name).read(), content_type='text/xml')
 
 
 class DeleteStudent(View):
 
-    def delete(self, request):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-        name = request.query_params.get('name', None)
-        if name:
-            delete_value = StudentDetails.objects.filter(student_name=name).delete()
-            if delete_value[0]:
-                return JsonResponse({'message': 'Tutorial was deleted successfully!'}, status=status.HTTP_204_NO_CONTENT)
-            return JsonResponse({'message': 'The tutorial does not exist'}, status=status.HTTP_404_NOT_FOUND)
-        return JsonResponse({'message': 'The tutorial does not exist'}, status=status.HTTP_404_NOT_FOUND)
+    def delete(self, request):
+        data = request.body.decode('utf-8')
+        if data:
+            xml_data = {i: j for i, j in xml_to_dict_parse(data).get('data').items()}
+            name = xml_data.get('name', None)
+            if name is not None:
+                delete_value = StudentDetails.objects.filter(student_name=name).delete()
+                if delete_value[0]:
+                    return HttpResponse(open(XML_LOCATION + 'deleted.xml').read(), content_type='text/xml', status=status.HTTP_204_NO_CONTENT)
+        return HttpResponse(open(XML_LOCATION + 'not_deleted.xml').read(), content_type='text/xml', status=status.HTTP_400_BAD_REQUEST)
 
 
 class CreateParent(View):
@@ -80,8 +94,21 @@ class CreateParent(View):
         parent_serializer = ParentsDetailsSerializer(data=xml_data)
         if parent_serializer.is_valid():
             parent_serializer.save()
-            return JsonResponse(parent_serializer.data, status=status.HTTP_201_CREATED)
-        return JsonResponse(parent_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            success_message = decide_the_message(parent_serializer.data, open(XML_LOCATION + 'created.xml').read())
+            return HttpResponse(success_message, status=status.HTTP_201_CREATED)
+        error_message = decide_the_message(parent_serializer.errors, open(XML_LOCATION + 'not_created.xml').read())
+        return HttpResponse(error_message, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request):
+        data = request.body.decode('utf-8')
+        xml_data = {i: j for i, j in xml_to_dict_parse(data).get('data').items()}
+        parent_serializer = ParentsDetailsSerializer(data=xml_data)
+        if parent_serializer.is_valid():
+            parent_serializer.save()
+            success_message = decide_the_message(parent_serializer.data, open(XML_LOCATION + 'created.xml').read())
+            return HttpResponse(success_message, status=status.HTTP_201_CREATED)
+        error_message = decide_the_message(parent_serializer.errors, open(XML_LOCATION + 'not_created.xml').read())
+        return HttpResponse(error_message, status=status.HTTP_400_BAD_REQUEST)
 
 
 class SearchParent(View):
@@ -89,30 +116,43 @@ class SearchParent(View):
     ?name=<value>
     """
 
-    def get(self, request):
-        tutorials = ParentsDetails.objects.all()[:MAX_QUERY_RESULT_LIMIT].values()
-        name = request.query_params.get('name', None)
-        if name is not None:
-            tutorials = ParentsDetails.objects.filter(student_name__icontains=name)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-        tutorials_serializer = ParentsDetailsSerializer(tutorials, many=True)
-        return JsonResponse(tutorials_serializer.data, safe=False)
+    def get(self, request):
+        parent_details = ParentsDetails.objects.all()[:MAX_QUERY_RESULT_LIMIT].values()
+        data = request.body.decode('utf-8')
+        if data:
+            xml_data = {i: j for i, j in xml_to_dict_parse(data).get('data').items()}
+            name = xml_data.get('name', None)
+            if name is not None:
+                parent_details = ParentsDetails.objects.filter(parent_name__icontains=name)[:MAX_QUERY_RESULT_LIMIT].values()
+        parent_details = [i for i in parent_details]
+        dict_xml_data = dicttoxml(parent_details).decode('utf-8')
+        file_name = NamedTemporaryFile(delete=True)
+        with open(file_name.name, 'w') as f:
+            f.write(dict_xml_data)
+        return HttpResponse(open(file_name.name).read(), content_type='text/xml')
 
 
 class DeleteParent(View):
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
     def delete(self, request):
+        data = request.body.decode('utf-8')
+        if data:
+            xml_data = {i: j for i, j in xml_to_dict_parse(data).get('data').items()}
+            name = xml_data.get('name', None)
+            if name is not None:
+                delete_value = ParentsDetails.objects.filter(parent_name=name).delete()
+                if delete_value[0]:
+                    return HttpResponse(open(XML_LOCATION + 'deleted.xml').read(), content_type='text/xml', status=status.HTTP_204_NO_CONTENT)
+        return HttpResponse(open(XML_LOCATION + 'not_deleted.xml').read(), content_type='text/xml', status=status.HTTP_400_BAD_REQUEST)
 
-        name = request.query_params.get('name', None)
-        if name:
-            delete_value = ParentsDetails.objects.filter(parent_name=name).delete()
-            if delete_value[0]:
-                return JsonResponse({'message': 'Tutorial was deleted successfully!'}, status=status.HTTP_204_NO_CONTENT)
-            return JsonResponse({'message': 'The tutorial does not exist'}, status=status.HTTP_404_NOT_FOUND)
-        return JsonResponse({'message': 'The tutorial does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
-
-class CreateTeacher(APIView):
+class CreateTeacher(View):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -123,34 +163,59 @@ class CreateTeacher(APIView):
         teacher_serializer = TeacherDetailsSerializer(data=xml_data)
         if teacher_serializer.is_valid():
             teacher_serializer.save()
-            return JsonResponse(teacher_serializer.data, status=status.HTTP_201_CREATED)
-        return JsonResponse(teacher_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            success_message = decide_the_message(teacher_serializer.data, open(XML_LOCATION + 'created.xml').read())
+            return HttpResponse(success_message, status=status.HTTP_201_CREATED)
+        error_message = decide_the_message(teacher_serializer.errors, open(XML_LOCATION + 'not_created.xml').read())
+        return HttpResponse(error_message, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request):
+        data = request.body.decode('utf-8')
+        xml_data = {i: j for i, j in xml_to_dict_parse(data).get('data').items()}
+        teacher_serializer = TeacherDetailsSerializer(data=xml_data)
+        if teacher_serializer.is_valid():
+            teacher_serializer.save()
+            success_message = decide_the_message(teacher_serializer.data, open(XML_LOCATION + 'created.xml').read())
+            return HttpResponse(success_message, status=status.HTTP_201_CREATED)
+        error_message = decide_the_message(teacher_serializer.errors, open(XML_LOCATION + 'not_created.xml').read())
+        return HttpResponse(error_message, status=status.HTTP_400_BAD_REQUEST)
 
 
-class SearchTeacher(APIView):
+class SearchTeacher(View):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def get(self, request):
+        teacher_details = TeacherDetails.objects.all()[:MAX_QUERY_RESULT_LIMIT].values()
+        data = request.body.decode('utf-8')
+        if data:
+            xml_data = {i: j for i, j in xml_to_dict_parse(data).get('data').items()}
+            name = xml_data.get('name', None)
+            if name is not None:
+                teacher_details = TeacherDetails.objects.filter(teacher_name__icontains=name)[:MAX_QUERY_RESULT_LIMIT].values()
+        teacher_details = [i for i in teacher_details]
+        dict_xml_data = dicttoxml(teacher_details).decode('utf-8')
+        file_name = NamedTemporaryFile(delete=True)
+        with open(file_name.name, 'w') as f:
+            f.write(dict_xml_data)
+        return HttpResponse(open(file_name.name).read(), content_type='text/xml')
 
-        tutorials = TeacherDetails.objects.all()
-        name = request.query_params.get('name', None)
-        if name is not None:
-            tutorials = TeacherDetails.objects.filter(student_name__icontains=name)
 
-        tutorials_serializer = TeacherDetailsSerializer(tutorials, many=True)
-        return JsonResponse(tutorials_serializer.data, safe=False)
+class DeleteTeacher(View):
 
-
-class DeleteTeacher(APIView):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def delete(self, request):
-
-        name = request.query_params.get('name', None)
-        if name:
-            delete_value = TeacherDetails.objects.filter(teacher_name=name).delete()
-            if delete_value[0]:
-                return JsonResponse({'message': 'Tutorial was deleted successfully!'}, status=status.HTTP_204_NO_CONTENT)
-            return JsonResponse({'message': 'The tutorial does not exist'}, status=status.HTTP_404_NOT_FOUND)
-        return JsonResponse({'message': 'The tutorial does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        data = request.body.decode('utf-8')
+        if data:
+            xml_data = {i: j for i, j in xml_to_dict_parse(data).get('data').items()}
+            name = xml_data.get('name', None)
+            if name is not None:
+                delete_value = TeacherDetails.objects.filter(teacher_name=name).delete()
+                if delete_value[0]:
+                    return HttpResponse(open(XML_LOCATION + 'deleted.xml').read(), content_type='text/xml', status=status.HTTP_204_NO_CONTENT)
+        return HttpResponse(open(XML_LOCATION + 'not_deleted.xml').read(), content_type='text/xml', status=status.HTTP_400_BAD_REQUEST)
 
 
 class CreateDriver(View):
@@ -164,31 +229,56 @@ class CreateDriver(View):
         driver_serializer = DriverDetailsSerializer(data=xml_data)
         if driver_serializer.is_valid():
             driver_serializer.save()
-            return JsonResponse(driver_serializer.data, status=status.HTTP_201_CREATED)
-        return JsonResponse(driver_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            success_message = decide_the_message(driver_serializer.data, open(XML_LOCATION + 'created.xml').read())
+            return HttpResponse(success_message, status=status.HTTP_201_CREATED)
+        error_message = decide_the_message(driver_serializer.errors, open(XML_LOCATION + 'not_created.xml').read())
+        return HttpResponse(error_message, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request):
+        data = request.body.decode('utf-8')
+        xml_data = {i: j for i, j in xml_to_dict_parse(data).get('data').items()}
+        driver_serializer = DriverDetailsSerializer(data=xml_data)
+        if driver_serializer.is_valid():
+            driver_serializer.save()
+            success_message = decide_the_message(driver_serializer.data, open(XML_LOCATION + 'created.xml').read())
+            return HttpResponse(success_message, status=status.HTTP_201_CREATED)
+        error_message = decide_the_message(driver_serializer.errors, open(XML_LOCATION + 'not_created.xml').read())
+        return HttpResponse(error_message, status=status.HTTP_400_BAD_REQUEST)
 
 
-class SearchDriver(APIView):
+class SearchDriver(View):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def get(self, request):
+        driver_details = DriverDetails.objects.all()[:MAX_QUERY_RESULT_LIMIT].values()
+        data = request.body.decode('utf-8')
+        if data:
+            xml_data = {i: j for i, j in xml_to_dict_parse(data).get('data').items()}
+            name = xml_data.get('name', None)
+            if name is not None:
+                driver_details = DriverDetails.objects.filter(driver_name__icontains=name)[:MAX_QUERY_RESULT_LIMIT].values()
+        driver_details = [i for i in driver_details]
+        dict_xml_data = dicttoxml(driver_details).decode('utf-8')
+        file_name = NamedTemporaryFile(delete=True)
+        with open(file_name.name, 'w') as f:
+            f.write(dict_xml_data)
+        return HttpResponse(open(file_name.name).read(), content_type='text/xml')
 
-        tutorials = DriverDetails.objects.all()
-        name = request.query_params.get('name', None)
-        if name is not None:
-            tutorials = DriverDetails.objects.filter(student_name__icontains=name)
 
-        tutorials_serializer = DriverDetailsSerializer(tutorials, many=True)
-        return JsonResponse(tutorials_serializer.data, safe=False)
+class DeleteDriver(View):
 
-
-class DeleteDriver(APIView):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def delete(self, request):
-
-        name = request.query_params.get('name', None)
-        if name:
-            delete_value = DriverDetails.objects.filter(driver_name=name).delete()
-            if delete_value[0]:
-                return JsonResponse({'message': 'Tutorial was deleted successfully!'}, status=status.HTTP_204_NO_CONTENT)
-            return JsonResponse({'message': 'The tutorial does not exist'}, status=status.HTTP_404_NOT_FOUND)
-        return JsonResponse({'message': 'The tutorial does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        data = request.body.decode('utf-8')
+        if data:
+            xml_data = {i: j for i, j in xml_to_dict_parse(data).get('data').items()}
+            name = xml_data.get('name', None)
+            if name is not None:
+                delete_value = DriverDetails.objects.filter(driver_name=name).delete()
+                if delete_value[0]:
+                    return HttpResponse(open(XML_LOCATION + 'deleted.xml').read(), content_type='text/xml', status=status.HTTP_204_NO_CONTENT)
+        return HttpResponse(open(XML_LOCATION + 'not_deleted.xml').read(), content_type='text/xml', status=status.HTTP_400_BAD_REQUEST)
