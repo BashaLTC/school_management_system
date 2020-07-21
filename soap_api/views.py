@@ -1,57 +1,167 @@
-# from django.views.decorators.csrf import csrf_exempt
-# from spyne.application import Application
-# from spyne.decorator import rpc
-# from spyne.model.primitive import Unicode, Integer
-# from spyne.protocol.soap import Soap11
-# from spyne.server.django import DjangoApplication
-# from spyne.service import ServiceBase
-#
-#
-# class SoapService(ServiceBase):
-#
-#     @rpc(Unicode(nillable=False), _return=Unicode)
-#     def hello(ctx, name):
-#         return f'Hello, {name}'
-#
-#     @rpc(Integer(nillable=False), Integer(nillable=False), _return=Integer)
-#     def sum(ctx, a, b):
-#         return int(a + b)
-#
-#
-# soap_app = Application(
-#     [SoapService],
-#     tns='django.soap.exmaple',
-#     in_protocol=Soap11(validator='lxml'),
-#     out_protocol=Soap11(),
-# )
-#
-# django_soap_application = DjangoApplication(soap_app)
-# my_soap_application = csrf_exempt(django_soap_application)
+from xmltodict import parse as xml_to_dict_parse
+from django.views import View
 
-import logging
-from spyne import (Application, rpc, ServiceBase, Integer, Unicode)
-from spyne import Iterable
-from spyne.protocol.http import HttpRpc
-from spyne.protocol.soap import Soap11
-from spyne.server.django import DjangoApplication
-from django.views.decorators.csrf import csrf_exempt
+from rest_framework import status
+from rest_framework.views import APIView
+from django.http.response import JsonResponse
 
-logging.basicConfig(level=logging.DEBUG)
+from rest_api.serializers import (StudentDetailsSerializer, TeacherDetailsSerializer, ParentsDetailsSerializer, DriverDetailsSerializer)
+from rest_api.models import (StudentDetails, TeacherDetails, ParentsDetails, DriverDetails)
 
 
-class HelloWorldService(ServiceBase):
+class CreateStudent(View):
 
-    @rpc(Unicode, Integer)
-    def say_hello(ctx, name, times):
-        for i in range(name):
-            yield 'Hello, %s' % name
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def post(self, request):
+
+        data = request.body.decode('utf-8')
+        xml_data = {i: j for i, j in xml_to_dict_parse(data).get('data').items()}
+        student_serializer = StudentDetailsSerializer(data=xml_data)
+        if student_serializer.is_valid():
+            student_serializer.save()
+            return JsonResponse(student_serializer.data, status=status.HTTP_201_CREATED)
+        return JsonResponse(student_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-application = Application(
-    [HelloWorldService],
-    tns='spyne.example.hello',
-    in_protocol=HttpRpc(validator='soft'),
-    out_protocol=Soap11()
-)
+class SearchStudent(APIView):
+    """
+    ?name=<value>
+    """
+    def get(self, request):
+        tutorials = StudentDetails.objects.all()
 
-hello_app = csrf_exempt(DjangoApplication(application))
+        name = request.query_params.get('name', None)
+        if name is not None:
+            tutorials = StudentDetails.objects.filter(student_name__icontains=name)
+
+        tutorials_serializer = StudentDetailsSerializer(tutorials, many=True)
+        return JsonResponse(tutorials_serializer.data, safe=False)
+
+
+class DeleteStudent(APIView):
+
+    def delete(self, request):
+
+        name = request.query_params.get('name', None)
+        if name:
+            delete_value = StudentDetails.objects.filter(student_name=name).delete()
+            if delete_value[0]:
+                return JsonResponse({'message': 'Tutorial was deleted successfully!'}, status=status.HTTP_204_NO_CONTENT)
+            return JsonResponse({'message': 'The tutorial does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        return JsonResponse({'message': 'The tutorial does not exist'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class CreateParent(APIView):
+
+    def post(self, request, *args, **kwargs):
+        data = request.body.decode('utf-8')
+        xml_data = {i: j for i, j in xml_to_dict_parse(data).get('data').items()}
+        parent_serializer = ParentsDetailsSerializer(data=xml_data)
+        if parent_serializer.is_valid():
+            parent_serializer.save()
+            return JsonResponse(parent_serializer.data, status=status.HTTP_201_CREATED)
+        return JsonResponse(parent_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SearchParent(APIView):
+
+    def get(self, request):
+
+        tutorials = ParentsDetails.objects.all()
+        name = request.query_params.get('name', None)
+        if name is not None:
+            tutorials = ParentsDetails.objects.filter(student_name__icontains=name)
+
+        tutorials_serializer = ParentsDetailsSerializer(tutorials, many=True)
+        return JsonResponse(tutorials_serializer.data, safe=False)
+
+
+class DeleteParent(APIView):
+
+    def delete(self, request):
+
+        name = request.query_params.get('name', None)
+        if name:
+            delete_value = ParentsDetails.objects.filter(parent_name=name).delete()
+            if delete_value[0]:
+                return JsonResponse({'message': 'Tutorial was deleted successfully!'}, status=status.HTTP_204_NO_CONTENT)
+            return JsonResponse({'message': 'The tutorial does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        return JsonResponse({'message': 'The tutorial does not exist'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class CreateTeacher(APIView):
+
+    def post(self, request, *args, **kwargs):
+        data = request.body.decode('utf-8')
+        xml_data = {i: j for i, j in xml_to_dict_parse(data).get('data').items()}
+        teacher_serializer = TeacherDetailsSerializer(data=xml_data)
+        if teacher_serializer.is_valid():
+            teacher_serializer.save()
+            return JsonResponse(teacher_serializer.data, status=status.HTTP_201_CREATED)
+        return JsonResponse(teacher_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SearchTeacher(APIView):
+
+    def get(self, request):
+
+        tutorials = TeacherDetails.objects.all()
+        name = request.query_params.get('name', None)
+        if name is not None:
+            tutorials = TeacherDetails.objects.filter(student_name__icontains=name)
+
+        tutorials_serializer = TeacherDetailsSerializer(tutorials, many=True)
+        return JsonResponse(tutorials_serializer.data, safe=False)
+
+
+class DeleteTeacher(APIView):
+
+    def delete(self, request):
+
+        name = request.query_params.get('name', None)
+        if name:
+            delete_value = TeacherDetails.objects.filter(teacher_name=name).delete()
+            if delete_value[0]:
+                return JsonResponse({'message': 'Tutorial was deleted successfully!'}, status=status.HTTP_204_NO_CONTENT)
+            return JsonResponse({'message': 'The tutorial does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        return JsonResponse({'message': 'The tutorial does not exist'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class CreateDriver(APIView):
+
+    def post(self, request, *args, **kwargs):
+        data = request.body.decode('utf-8')
+        xml_data = {i: j for i, j in xml_to_dict_parse(data).get('data').items()}
+        driver_serializer = DriverDetailsSerializer(data=xml_data)
+        if driver_serializer.is_valid():
+            driver_serializer.save()
+            return JsonResponse(driver_serializer.data, status=status.HTTP_201_CREATED)
+        return JsonResponse(driver_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SearchDriver(APIView):
+
+    def get(self, request):
+
+        tutorials = DriverDetails.objects.all()
+        name = request.query_params.get('name', None)
+        if name is not None:
+            tutorials = DriverDetails.objects.filter(student_name__icontains=name)
+
+        tutorials_serializer = DriverDetailsSerializer(tutorials, many=True)
+        return JsonResponse(tutorials_serializer.data, safe=False)
+
+
+class DeleteDriver(APIView):
+
+    def delete(self, request):
+
+        name = request.query_params.get('name', None)
+        if name:
+            delete_value = DriverDetails.objects.filter(driver_name=name).delete()
+            if delete_value[0]:
+                return JsonResponse({'message': 'Tutorial was deleted successfully!'}, status=status.HTTP_204_NO_CONTENT)
+            return JsonResponse({'message': 'The tutorial does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        return JsonResponse({'message': 'The tutorial does not exist'}, status=status.HTTP_404_NOT_FOUND)
