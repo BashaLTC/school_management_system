@@ -32,7 +32,7 @@ class CreateStudent(View):
         return JsonResponse(student_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class SearchStudent(APIView):
+class SearchStudent(View):
     """
     ?name=<value>
     """
@@ -56,7 +56,7 @@ class SearchStudent(APIView):
         return HttpResponse(open(file_name.name).read(), content_type='text/xml')
 
 
-class DeleteStudent(APIView):
+class DeleteStudent(View):
 
     def delete(self, request):
 
@@ -69,9 +69,12 @@ class DeleteStudent(APIView):
         return JsonResponse({'message': 'The tutorial does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
 
-class CreateParent(APIView):
+class CreateParent(View):
 
-    def post(self, request, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def post(self, request):
         data = request.body.decode('utf-8')
         xml_data = {i: j for i, j in xml_to_dict_parse(data).get('data').items()}
         parent_serializer = ParentsDetailsSerializer(data=xml_data)
@@ -81,7 +84,7 @@ class CreateParent(APIView):
         return JsonResponse(parent_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class SearchParent(APIView):
+class SearchParent(View):
     """
     ?name=<value>
     """
@@ -96,7 +99,7 @@ class SearchParent(APIView):
         return JsonResponse(tutorials_serializer.data, safe=False)
 
 
-class DeleteParent(APIView):
+class DeleteParent(View):
 
     def delete(self, request):
 
@@ -111,7 +114,10 @@ class DeleteParent(APIView):
 
 class CreateTeacher(APIView):
 
-    def post(self, request, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def post(self, request):
         data = request.body.decode('utf-8')
         xml_data = {i: j for i, j in xml_to_dict_parse(data).get('data').items()}
         teacher_serializer = TeacherDetailsSerializer(data=xml_data)
@@ -147,9 +153,12 @@ class DeleteTeacher(APIView):
         return JsonResponse({'message': 'The tutorial does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
 
-class CreateDriver(APIView):
+class CreateDriver(View):
 
-    def post(self, request, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def post(self, request):
         data = request.body.decode('utf-8')
         xml_data = {i: j for i, j in xml_to_dict_parse(data).get('data').items()}
         driver_serializer = DriverDetailsSerializer(data=xml_data)
