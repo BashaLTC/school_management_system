@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<root>
+    <unauthorized>
+        The request did not include an authentication token or the authentication token was expired.
+    </unauthorized>
+</root>

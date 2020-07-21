@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<root>
+    <internal_server_error>
+        The request was not completed due to an internal error on the server side.
+    </internal_server_error>
+</root>

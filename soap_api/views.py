@@ -7,7 +7,7 @@ from django.core.files.temp import NamedTemporaryFile
 from django.http.response import JsonResponse, HttpResponse
 
 from utils.util import decide_the_message
-from school_management_system.settings import (MAX_QUERY_RESULT_LIMIT, XML_LOCATION)
+from school_management_system.config import (MAX_QUERY_RESULT_LIMIT, XML_LOCATION)
 from rest_api.models import (StudentDetails, TeacherDetails, ParentsDetails, DriverDetails)
 from rest_api.serializers import (StudentDetailsSerializer, TeacherDetailsSerializer, ParentsDetailsSerializer, DriverDetailsSerializer)
 

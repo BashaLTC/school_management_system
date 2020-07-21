@@ -57,6 +57,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'utils.middleware.MethodNotAllowedMiddleware',
 ]
 
 ROOT_URLCONF = 'school_management_system.urls'
@@ -128,17 +129,3 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
-
-
-REST_FRAMEWORK = {
-  'DEFAULT_PARSER_CLASSES': (
-    'rest_framework_xml.parsers.XMLParser',
-  ),
-  'DEFAULT_RENDERER_CLASSES': (
-    'rest_framework_xml.renderers.XMLRenderer',
-  ),
-}
-
-
-MAX_QUERY_RESULT_LIMIT = 50
-XML_LOCATION = BASE_DIR + '/utils/xml_responses/'

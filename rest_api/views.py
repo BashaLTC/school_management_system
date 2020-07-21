@@ -146,14 +146,6 @@ class SearchDriver(APIView):
 
 class DeleteDriver(APIView):
 
-    def delete(self, request, pk):
-
-        try:
-            tutorial = DriverDetails.objects.get(pk=pk).delete()
-            return JsonResponse({'message': 'Tutorial was deleted successfully!'}, status=status.HTTP_204_NO_CONTENT)
-        except DriverDetails.DoesNotExist:
-            return JsonResponse({'message': 'The tutorial does not exist'}, status=status.HTTP_404_NOT_FOUND)
-
     def delete(self, request):
 
         name = request.query_params.get('name', None)
