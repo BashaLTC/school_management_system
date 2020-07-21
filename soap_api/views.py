@@ -1,10 +1,17 @@
+import lxml.etree as ET
 from xmltodict import parse as xml_to_dict_parse
+from dicttoxml import dicttoxml
 from django.views import View
 
 from rest_framework import status
 from rest_framework.views import APIView
-from django.http.response import JsonResponse
+from django.http.response import JsonResponse, HttpResponse
+from django.shortcuts import render
+from django.core.files.temp import NamedTemporaryFile
 
+from rest_framework_xml.parsers import XMLParser
+from rest_framework_xml.renderers import XMLRenderer
+from school_management_system.settings import MAX_QUERY_RESULT_LIMIT
 from rest_api.serializers import (StudentDetailsSerializer, TeacherDetailsSerializer, ParentsDetailsSerializer, DriverDetailsSerializer)
 from rest_api.models import (StudentDetails, TeacherDetails, ParentsDetails, DriverDetails)
 
@@ -29,15 +36,24 @@ class SearchStudent(APIView):
     """
     ?name=<value>
     """
+
     def get(self, request):
-        tutorials = StudentDetails.objects.all()
+        student_details = StudentDetails.objects.all()[:MAX_QUERY_RESULT_LIMIT].values()
+        data = request.body.decode('utf-8')
+        if data:
+            xml_data = {i: j for i, j in xml_to_dict_parse(data).get('data').items()}
+            name = xml_data.get('name', None)
+            if name is not None:
+                student_details = StudentDetails.objects.filter(student_name__icontains=name)[:MAX_QUERY_RESULT_LIMIT].values()
 
-        name = request.query_params.get('name', None)
-        if name is not None:
-            tutorials = StudentDetails.objects.filter(student_name__icontains=name)
+        student_details = [i for i in student_details]
+        dict_xml_data = dicttoxml(student_details).decode('utf-8')
+        file_name = NamedTemporaryFile(delete=True)
+        with open(file_name.name, 'w') as f:
+            f.write(dict_xml_data)
+        print(file_name.name)
 
-        tutorials_serializer = StudentDetailsSerializer(tutorials, many=True)
-        return JsonResponse(tutorials_serializer.data, safe=False)
+        return HttpResponse(open(file_name.name).read(), content_type='text/xml')
 
 
 class DeleteStudent(APIView):
@@ -66,10 +82,12 @@ class CreateParent(APIView):
 
 
 class SearchParent(APIView):
+    """
+    ?name=<value>
+    """
 
     def get(self, request):
-
-        tutorials = ParentsDetails.objects.all()
+        tutorials = ParentsDetails.objects.all()[:MAX_QUERY_RESULT_LIMIT].values()
         name = request.query_params.get('name', None)
         if name is not None:
             tutorials = ParentsDetails.objects.filter(student_name__icontains=name)
