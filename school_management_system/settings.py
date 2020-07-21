@@ -44,8 +44,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'rest_api.apps.MainAppConfig',
     'corsheaders',
+    'rest_api.apps.RestApiConfig',
+    'soap_api.apps.SoapApiConfig',
 ]
 
 MIDDLEWARE = [
