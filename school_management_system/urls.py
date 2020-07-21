@@ -4,4 +4,5 @@ from django.urls import (path, include)
 urlpatterns = [
     path('admin/', admin.site.urls),
     path(r'', include('rest_api.urls')),
+    path(r'', include('soap_api.urls')),
 ]

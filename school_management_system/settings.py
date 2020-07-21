@@ -44,8 +44,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'rest_api.apps.MainAppConfig',
     'corsheaders',
+    'rest_api.apps.RestApiConfig',
+    'soap_api.apps.SoapApiConfig',
 ]
 
 MIDDLEWARE = [
@@ -127,3 +128,17 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+
+REST_FRAMEWORK = {
+  'DEFAULT_PARSER_CLASSES': (
+    'rest_framework_xml.parsers.XMLParser',
+  ),
+  'DEFAULT_RENDERER_CLASSES': (
+    'rest_framework_xml.renderers.XMLRenderer',
+  ),
+}
+
+
+MAX_QUERY_RESULT_LIMIT = 50
+XML_LOCATION = BASE_DIR + '/utils/xml_responses/'
