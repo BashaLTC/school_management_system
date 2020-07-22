@@ -14,3 +14,17 @@ def decide_the_message(x, y):
         return x
     else:
         return y
+
+
+def compose_into_a_single_decorator(*decs):
+    """
+    :param decs:
+        > decorator
+    :return:
+        > combined decorator
+    """
+    def decor(f):
+        for dec in decs:
+            f = dec(f)
+        return f
+    return decor

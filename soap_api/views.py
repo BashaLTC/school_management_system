@@ -1,10 +1,9 @@
-
 from django.views import View
 from dicttoxml import dicttoxml
 from rest_framework import status
+from django.http.response import HttpResponse
 from xmltodict import parse as xml_to_dict_parse
 from django.core.files.temp import NamedTemporaryFile
-from django.http.response import JsonResponse, HttpResponse
 
 from utils.util import decide_the_message
 from school_management_system.config import (MAX_QUERY_RESULT_LIMIT, XML_LOCATION)
@@ -29,15 +28,7 @@ class CreateStudent(View):
         return HttpResponse(error_message, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request):
-        data = request.body.decode('utf-8')
-        xml_data = {i: j for i, j in xml_to_dict_parse(data).get('data').items()}
-        student_serializer = StudentDetailsSerializer(data=xml_data)
-        if student_serializer.is_valid():
-            student_serializer.save()
-            success_message = decide_the_message(student_serializer.data, open(XML_LOCATION + 'created.xml').read())
-            return HttpResponse(success_message, status=status.HTTP_201_CREATED)
-        error_message = decide_the_message(student_serializer.errors, open(XML_LOCATION + 'not_created.xml').read())
-        return HttpResponse(error_message, status=status.HTTP_400_BAD_REQUEST)
+        return self.post(request)
 
 
 class SearchStudent(View):
@@ -100,15 +91,7 @@ class CreateParent(View):
         return HttpResponse(error_message, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request):
-        data = request.body.decode('utf-8')
-        xml_data = {i: j for i, j in xml_to_dict_parse(data).get('data').items()}
-        parent_serializer = ParentsDetailsSerializer(data=xml_data)
-        if parent_serializer.is_valid():
-            parent_serializer.save()
-            success_message = decide_the_message(parent_serializer.data, open(XML_LOCATION + 'created.xml').read())
-            return HttpResponse(success_message, status=status.HTTP_201_CREATED)
-        error_message = decide_the_message(parent_serializer.errors, open(XML_LOCATION + 'not_created.xml').read())
-        return HttpResponse(error_message, status=status.HTTP_400_BAD_REQUEST)
+        return self.post(request)
 
 
 class SearchParent(View):
@@ -169,15 +152,7 @@ class CreateTeacher(View):
         return HttpResponse(error_message, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request):
-        data = request.body.decode('utf-8')
-        xml_data = {i: j for i, j in xml_to_dict_parse(data).get('data').items()}
-        teacher_serializer = TeacherDetailsSerializer(data=xml_data)
-        if teacher_serializer.is_valid():
-            teacher_serializer.save()
-            success_message = decide_the_message(teacher_serializer.data, open(XML_LOCATION + 'created.xml').read())
-            return HttpResponse(success_message, status=status.HTTP_201_CREATED)
-        error_message = decide_the_message(teacher_serializer.errors, open(XML_LOCATION + 'not_created.xml').read())
-        return HttpResponse(error_message, status=status.HTTP_400_BAD_REQUEST)
+        return self.post(request)
 
 
 class SearchTeacher(View):
@@ -235,15 +210,7 @@ class CreateDriver(View):
         return HttpResponse(error_message, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request):
-        data = request.body.decode('utf-8')
-        xml_data = {i: j for i, j in xml_to_dict_parse(data).get('data').items()}
-        driver_serializer = DriverDetailsSerializer(data=xml_data)
-        if driver_serializer.is_valid():
-            driver_serializer.save()
-            success_message = decide_the_message(driver_serializer.data, open(XML_LOCATION + 'created.xml').read())
-            return HttpResponse(success_message, status=status.HTTP_201_CREATED)
-        error_message = decide_the_message(driver_serializer.errors, open(XML_LOCATION + 'not_created.xml').read())
-        return HttpResponse(error_message, status=status.HTTP_400_BAD_REQUEST)
+        return self.post(request)
 
 
 class SearchDriver(View):

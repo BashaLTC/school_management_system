@@ -2,14 +2,22 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.parsers import JSONParser
 from django.http.response import JsonResponse
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import (authentication_classes, permission_classes)
 
 from rest_api.serializers import (StudentDetailsSerializer, TeacherDetailsSerializer, ParentsDetailsSerializer, DriverDetailsSerializer)
 from rest_api.models import (StudentDetails, TeacherDetails, ParentsDetails, DriverDetails)
+from utils.util import compose_into_a_single_decorator
+
+
+not_use_token_as_default_auth = compose_into_a_single_decorator(authentication_classes([]), permission_classes([]))
 
 
 class CreateStudent(APIView):
 
-    def post(self, request, *args, **kwargs):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
         data = JSONParser().parse(request)
         tutorial_serializer = StudentDetailsSerializer(data=data)
         if tutorial_serializer.is_valid():
@@ -17,11 +25,17 @@ class CreateStudent(APIView):
             return JsonResponse(tutorial_serializer.data, status=status.HTTP_201_CREATED)
         return JsonResponse(tutorial_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def put(self, request):
+        return self.post(request)
+
 
 class SearchStudent(APIView):
     """
     ?name=<value>
     """
+
+    permission_classes = (IsAuthenticated,)
+
     def get(self, request):
         tutorials = StudentDetails.objects.all()
 
@@ -55,6 +69,9 @@ class CreateParent(APIView):
             tutorial_serializer.save()
             return JsonResponse(tutorial_serializer.data, status=status.HTTP_201_CREATED)
         return JsonResponse(tutorial_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request):
+        return self.post(request)
 
 
 class SearchParent(APIView):
@@ -93,6 +110,9 @@ class CreateTeacher(APIView):
             return JsonResponse(tutorial_serializer.data, status=status.HTTP_201_CREATED)
         return JsonResponse(tutorial_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def put(self, request):
+        return self.post(request)
+
 
 class SearchTeacher(APIView):
 
@@ -120,6 +140,7 @@ class DeleteTeacher(APIView):
         return JsonResponse({'message': 'The tutorial does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
 
+@not_use_token_as_default_auth
 class CreateDriver(APIView):
 
     def post(self, request, *args, **kwargs):
@@ -130,7 +151,11 @@ class CreateDriver(APIView):
             return JsonResponse(tutorial_serializer.data, status=status.HTTP_201_CREATED)
         return JsonResponse(tutorial_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def put(self, request):
+        return self.post(request)
 
+
+@not_use_token_as_default_auth
 class SearchDriver(APIView):
 
     def get(self, request):
@@ -144,6 +169,7 @@ class SearchDriver(APIView):
         return JsonResponse(tutorials_serializer.data, safe=False)
 
 
+@not_use_token_as_default_auth
 class DeleteDriver(APIView):
 
     def delete(self, request):

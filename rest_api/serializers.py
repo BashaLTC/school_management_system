@@ -1,26 +1,33 @@
 from rest_framework import serializers
+from django.contrib.auth.models import User
 from rest_api.models import (StudentDetails, ParentsDetails, TeacherDetails, DriverDetails)
 
 
 class StudentDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentDetails
-        fields = tuple(i.name for i in StudentDetails._meta.fields)
+        fields = '__all__'
 
 
 class ParentsDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = ParentsDetails
-        fields = tuple(i.name for i in ParentsDetails._meta.fields)
+        fields = '__all__'
 
 
 class TeacherDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = TeacherDetails
-        fields = tuple(i.name for i in TeacherDetails._meta.fields)
+        fields = '__all__'
 
 
 class DriverDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = DriverDetails
-        fields = tuple(i.name for i in DriverDetails._meta.fields)
+        fields = '__all__'
+
+
+class UserSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = '__all__'
