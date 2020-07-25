@@ -24,7 +24,7 @@ SECRET_KEY = '!6vcf1x2c#9q%upc$!n+q%#k1w298l%3)8jyc9%&s058$9mk@j'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 # CORS
 CORS_ORIGIN_ALLOW_ALL = False
@@ -128,13 +128,4 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.TokenAuthentication',
-    )}
-
 API_KEY_CUSTOM_HEADER = "HTTP_X_API_KEY"
-

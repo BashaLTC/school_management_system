@@ -11,7 +11,11 @@ from django.http.response import JsonResponse
 from rest_framework_api_key.models import APIKey
 from django.utils.timezone import now
 from datetime import timedelta
+from rest_framework_api_key.models import APIKey
+from rest_framework.authtoken.models import Token
+from rest_framework.authentication import TokenAuthentication
 
+from school_management_system.settings import API_KEY_CUSTOM_HEADER
 from school_management_system.config import API_KEY_EXPIRY_HOURS
 
 
@@ -44,3 +48,17 @@ class ApiTokenGenerator(View):
                 return JsonResponse({"API_KEY_NAME": api_key.name, 'API_KEY': key, "API_KEY_EXPIRY": api_key.expiry_date})
             return JsonResponse({'error': True}, status=status.HTTP_401_UNAUTHORIZED)
         return JsonResponse({'error': True}, status=status.HTTP_204_NO_CONTENT)
+
+
+def authenticate_api_key(request):
+    api_key = request.META.get(API_KEY_CUSTOM_HEADER)
+    if api_key:
+        return bool(APIKey.objects.is_valid(api_key))
+    return False
+
+
+def is_token_authenticated(request):
+    api_key = request.META.get('HTTP_AUTHORIZATION')
+    if api_key:
+        return bool(Token.objects.filter(key=api_key.split()[-1]))
+    return False
