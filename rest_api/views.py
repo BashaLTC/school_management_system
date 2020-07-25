@@ -5,9 +5,10 @@ from django.http.response import JsonResponse
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import (authentication_classes, permission_classes)
 
-from rest_api.serializers import (StudentDetailsSerializer, TeacherDetailsSerializer, ParentsDetailsSerializer, DriverDetailsSerializer)
-from rest_api.models import (StudentDetails, TeacherDetails, ParentsDetails, DriverDetails)
 from utils.util import compose_into_a_single_decorator
+from school_management_system.authentications import authenticate_user
+from rest_api.models import (StudentDetails, TeacherDetails, ParentsDetails, DriverDetails)
+from rest_api.serializers import (StudentDetailsSerializer, TeacherDetailsSerializer, ParentsDetailsSerializer, DriverDetailsSerializer)
 
 
 not_use_token_as_default_auth = compose_into_a_single_decorator(authentication_classes([]), permission_classes([]))
@@ -38,19 +39,18 @@ class SearchStudent(APIView):
 
     def get(self, request):
         tutorials = StudentDetails.objects.all()
-
         name = request.query_params.get('name', None)
         if name is not None:
             tutorials = StudentDetails.objects.filter(student_name__icontains=name)
-
         tutorials_serializer = StudentDetailsSerializer(tutorials, many=True)
         return JsonResponse(tutorials_serializer.data, safe=False)
 
 
 class DeleteStudent(APIView):
 
-    def delete(self, request):
+    permission_classes = (IsAuthenticated,)
 
+    def delete(self, request):
         name = request.query_params.get('name', None)
         if name:
             delete_value = StudentDetails.objects.filter(student_name=name).delete()
@@ -60,46 +60,53 @@ class DeleteStudent(APIView):
         return JsonResponse({'message': 'The tutorial does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
 
+@not_use_token_as_default_auth
 class CreateParent(APIView):
 
     def post(self, request, *args, **kwargs):
-        tutorial_data = JSONParser().parse(request)
-        tutorial_serializer = ParentsDetailsSerializer(data=tutorial_data)
-        if tutorial_serializer.is_valid():
-            tutorial_serializer.save()
-            return JsonResponse(tutorial_serializer.data, status=status.HTTP_201_CREATED)
-        return JsonResponse(tutorial_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if authenticate_user(request):
+            tutorial_data = JSONParser().parse(request)
+            tutorial_serializer = ParentsDetailsSerializer(data=tutorial_data)
+            if tutorial_serializer.is_valid():
+                tutorial_serializer.save()
+                return JsonResponse(tutorial_serializer.data, status=status.HTTP_201_CREATED)
+            return JsonResponse(tutorial_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({'error': True}, status=status.HTTP_401_UNAUTHORIZED)
 
     def put(self, request):
         return self.post(request)
 
 
+@not_use_token_as_default_auth
 class SearchParent(APIView):
 
     def get(self, request):
+        if authenticate_user(request):
+            tutorials = ParentsDetails.objects.all()
+            name = request.query_params.get('name', None)
+            if name is not None:
+                tutorials = ParentsDetails.objects.filter(student_name__icontains=name)
 
-        tutorials = ParentsDetails.objects.all()
-        name = request.query_params.get('name', None)
-        if name is not None:
-            tutorials = ParentsDetails.objects.filter(student_name__icontains=name)
-
-        tutorials_serializer = ParentsDetailsSerializer(tutorials, many=True)
-        return JsonResponse(tutorials_serializer.data, safe=False)
+            tutorials_serializer = ParentsDetailsSerializer(tutorials, many=True)
+            return JsonResponse(tutorials_serializer.data, safe=False)
+        return JsonResponse({'error': True}, status=status.HTTP_401_UNAUTHORIZED)
 
 
+@not_use_token_as_default_auth
 class DeleteParent(APIView):
 
     def delete(self, request):
-
-        name = request.query_params.get('name', None)
-        if name:
-            delete_value = ParentsDetails.objects.filter(parent_name=name).delete()
-            if delete_value[0]:
-                return JsonResponse({'message': 'Tutorial was deleted successfully!'}, status=status.HTTP_204_NO_CONTENT)
+        if authenticate_user(request):
+            name = request.query_params.get('name', None)
+            if name:
+                delete_value = ParentsDetails.objects.filter(parent_name=name).delete()
+                if delete_value[0]:
+                    return JsonResponse({'message': 'Tutorial was deleted successfully!'}, status=status.HTTP_204_NO_CONTENT)
             return JsonResponse({'message': 'The tutorial does not exist'}, status=status.HTTP_404_NOT_FOUND)
-        return JsonResponse({'message': 'The tutorial does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        return JsonResponse({'message': 'The tutorial does not exist'}, status=status.HTTP_401_UNAUTHORIZED)
 
 
+@not_use_token_as_default_auth
 class CreateTeacher(APIView):
 
     def post(self, request, *args, **kwargs):
@@ -114,6 +121,7 @@ class CreateTeacher(APIView):
         return self.post(request)
 
 
+@not_use_token_as_default_auth
 class SearchTeacher(APIView):
 
     def get(self, request):
@@ -121,12 +129,13 @@ class SearchTeacher(APIView):
         tutorials = TeacherDetails.objects.all()
         name = request.query_params.get('name', None)
         if name is not None:
-            tutorials = TeacherDetails.objects.filter(student_name__icontains=name)
+            tutorials = TeacherDetails.objects.filter(teacher_name__icontains=name)
 
         tutorials_serializer = TeacherDetailsSerializer(tutorials, many=True)
         return JsonResponse(tutorials_serializer.data, safe=False)
 
 
+@not_use_token_as_default_auth
 class DeleteTeacher(APIView):
 
     def delete(self, request):
@@ -158,12 +167,11 @@ class CreateDriver(APIView):
 @not_use_token_as_default_auth
 class SearchDriver(APIView):
 
-    def get(self, request):
-
+    def get(self, request, *args, **kwargs):
         tutorials = DriverDetails.objects.all()
         name = request.query_params.get('name', None)
         if name is not None:
-            tutorials = DriverDetails.objects.filter(student_name__icontains=name)
+            tutorials = DriverDetails.objects.filter(driver_name__icontains=name)
 
         tutorials_serializer = DriverDetailsSerializer(tutorials, many=True)
         return JsonResponse(tutorials_serializer.data, safe=False)
@@ -172,8 +180,7 @@ class SearchDriver(APIView):
 @not_use_token_as_default_auth
 class DeleteDriver(APIView):
 
-    def delete(self, request):
-
+    def delete(self, request, *args, **kwargs):
         name = request.query_params.get('name', None)
         if name:
             delete_value = DriverDetails.objects.filter(driver_name=name).delete()
