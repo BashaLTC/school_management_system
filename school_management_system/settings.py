@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
+    'rest_framework_api_key',
     'corsheaders',
     'rest_api.apps.RestApiConfig',
     'soap_api.apps.SoapApiConfig',
@@ -134,3 +135,6 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication',
     )}
+
+API_KEY_CUSTOM_HEADER = "HTTP_X_API_KEY"
+

@@ -1,6 +1,8 @@
 from school_management_system.settings import BASE_DIR
 
 MAX_QUERY_RESULT_LIMIT = 50
+API_KEY_EXPIRY_HOURS = 24           # in hours
+
 XML_LOCATION = BASE_DIR + '/utils/xml_responses/'
 
 REST_MIDDLEWARE_CONFIG = {

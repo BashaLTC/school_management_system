@@ -4,6 +4,7 @@ from rest_framework.parsers import JSONParser
 from django.http.response import JsonResponse
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import (authentication_classes, permission_classes)
+from rest_framework_api_key.permissions import HasAPIKey
 
 from utils.util import compose_into_a_single_decorator
 from school_management_system.authentications import authenticate_user
@@ -106,8 +107,9 @@ class DeleteParent(APIView):
         return JsonResponse({'message': 'The tutorial does not exist'}, status=status.HTTP_401_UNAUTHORIZED)
 
 
-@not_use_token_as_default_auth
 class CreateTeacher(APIView):
+
+    permission_classes = (HasAPIKey,)
 
     def post(self, request, *args, **kwargs):
         tutorial_data = JSONParser().parse(request)
@@ -121,8 +123,9 @@ class CreateTeacher(APIView):
         return self.post(request)
 
 
-@not_use_token_as_default_auth
 class SearchTeacher(APIView):
+
+    permission_classes = (HasAPIKey, )
 
     def get(self, request):
 
@@ -137,6 +140,8 @@ class SearchTeacher(APIView):
 
 @not_use_token_as_default_auth
 class DeleteTeacher(APIView):
+
+    permission_classes = (HasAPIKey,)
 
     def delete(self, request):
 
