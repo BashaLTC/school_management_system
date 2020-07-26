@@ -4,14 +4,11 @@ from rest_framework import status
 from django.http.response import HttpResponse
 from xmltodict import parse as xml_to_dict_parse
 from django.core.files.temp import NamedTemporaryFile
-from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import permission_classes
 
 from utils.util import decide_the_message
-from school_management_system.authentications import (authenticate_user, authenticate_api_key, is_token_authenticated)
-from school_management_system.config import (MAX_QUERY_RESULT_LIMIT, XML_LOCATION)
 from rest_api.models import (StudentDetails, TeacherDetails, ParentsDetails, DriverDetails)
+from school_management_system.config import (MAX_QUERY_RESULT_LIMIT, XML_LOCATION, GIF_LOCATION)
+from school_management_system.authentications import (authenticate_user, authenticate_api_key, is_token_authenticated)
 from rest_api.serializers import (StudentDetailsSerializer, TeacherDetailsSerializer, ParentsDetailsSerializer, DriverDetailsSerializer)
 
 
@@ -269,3 +266,18 @@ class DeleteDriver(View):
                 if delete_value[0]:
                     return HttpResponse(open(XML_LOCATION + 'deleted.xml').read(), content_type='text/xml', status=status.HTTP_204_NO_CONTENT)
         return HttpResponse(open(XML_LOCATION + 'not_deleted.xml').read(), content_type='text/xml', status=status.HTTP_400_BAD_REQUEST)
+
+
+class HomeView(View):
+    def get(self, request):
+        image_data = open(GIF_LOCATION + '404_page_not_found.gif', "rb").read()
+        return HttpResponse(image_data, content_type="image/png", status=status.HTTP_404_NOT_FOUND)
+
+    def post(self, request):
+        return self.get(request)
+
+    def put(self, request):
+        return self.get(request)
+
+    def delete(self, request):
+        return self.get(request)

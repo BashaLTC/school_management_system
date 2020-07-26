@@ -1,9 +1,9 @@
-from django.urls import (path, re_path)
+from django.urls import path
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.cache import never_cache
-from soap_api.views import (CreateStudent, SearchStudent, DeleteStudent, CreateParent, SearchParent, DeleteParent, CreateTeacher, SearchTeacher, DeleteTeacher, CreateDriver,
-                            SearchDriver, DeleteDriver)
 from rest_framework.urlpatterns import format_suffix_patterns
+from soap_api.views import (CreateStudent, SearchStudent, DeleteStudent, CreateParent, SearchParent, DeleteParent, CreateTeacher, SearchTeacher, DeleteTeacher,
+                            CreateDriver, SearchDriver, DeleteDriver)
 
 urlpatterns = [
     # Student endpoints

@@ -3,12 +3,12 @@ from rest_framework.views import APIView
 from rest_framework.parsers import JSONParser
 from django.http.response import JsonResponse
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import (authentication_classes, permission_classes)
 from rest_framework_api_key.permissions import HasAPIKey
+from rest_framework.decorators import (authentication_classes, permission_classes)
 
 from utils.util import compose_into_a_single_decorator
-from school_management_system.authentications import (authenticate_user, is_token_authenticated, authenticate_api_key)
 from rest_api.models import (StudentDetails, TeacherDetails, ParentsDetails, DriverDetails)
+from school_management_system.authentications import (authenticate_user, is_token_authenticated, authenticate_api_key)
 from rest_api.serializers import (StudentDetailsSerializer, TeacherDetailsSerializer, ParentsDetailsSerializer, DriverDetailsSerializer)
 
 

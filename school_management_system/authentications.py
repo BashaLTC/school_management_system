@@ -1,22 +1,20 @@
 import json
 import base64
 from django.views import View
+from datetime import timedelta
 from rest_framework import status
 from rest_framework import routers
 from rest_framework import viewsets
+from django.utils.timezone import now
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
-from rest_api.serializers import UserSerializers
 from django.http.response import JsonResponse
-from rest_framework_api_key.models import APIKey
-from django.utils.timezone import now
-from datetime import timedelta
+from rest_api.serializers import UserSerializers
 from rest_framework_api_key.models import APIKey
 from rest_framework.authtoken.models import Token
-from rest_framework.authentication import TokenAuthentication
 
-from school_management_system.settings import API_KEY_CUSTOM_HEADER
 from school_management_system.config import API_KEY_EXPIRY_HOURS
+from school_management_system.settings import API_KEY_CUSTOM_HEADER
 
 
 class UserViewSets(viewsets.ModelViewSet):
