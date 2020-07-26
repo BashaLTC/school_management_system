@@ -37,4 +37,20 @@
        
        ```json
         {"Authorization": "Token <token we got from the previous step>"}
-```
+        ```
+
+### setup
+
+1. MySql setup
+    
+   ```text
+
+     CREATE USER 'liberty'@'localhost' IDENTIFIED BY 'liberty123';
+
+     GRANT ALL ON *.* TO 'liberty'@'localhost';
+
+     mysql -uliberty -pliberty123
+
+     CREATE DATABASE school_db
+      ```   
+2. 

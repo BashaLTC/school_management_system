@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
+from base64 import (b64decode, b64encode)
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -89,6 +90,17 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    }
+}
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'CONN_MAX_AGE': 600,  # Keep persistent connection for 10 minutes.
+        'NAME': 'school_db',
+        'USER': b64decode('bGliZXJ0eQ==').decode('utf-8'),
+        'PASSWORD': b64decode('bGliZXJ0eTEyMw==').decode('utf-8'),
+        'HOST': '',
+        'PORT': '',
     }
 }
 
