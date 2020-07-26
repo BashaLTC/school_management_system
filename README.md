@@ -1,19 +1,22 @@
 ### REST API
-* API  1 - endpoint : createStudent HTTP Method: PUT/POST
-* API- 2 - endpoint : searchStudent HTTP Method: GET
-* API- 3 - endpoint : deleteStudent HTTP Method: DELETE
-
-* API  4 - endpoint : createParent HTTP Method: PUT/POST
-* API- 5 - endpoint : searchParent HTTP Method: GET
-* API- 6 - endpoint : deleteParent HTTP Method: DELETE
-
-* API  7 - endpoint : createTeacher HTTP Method: PUT/POST
-* API- 8 - endpoint : searchTeacher HTTP Method: GET
-* API- 9 - endpoint : deleteTeacher HTTP Method: DELETE
-
-* API-10 - endpoint : createDriver HTTP Method: PUT/POST
-* API-11 - endpoint : searchDriver HTTP Method: GET
-* API-12 - endpoint : deleteDriver HTTP Method: DELETE
+    * API  1 - endpoint : createStudent HTTP Method: PUT/POST  -> Bearer token based auth (key is valida forever)
+    * API- 2 - endpoint : searchStudent HTTP Method: GET
+    * API- 3 - endpoint : deleteStudent HTTP Method: DELETE
+    
+    
+    * API  4 - endpoint : createParent HTTP Method: PUT/POST -> Basic Auth :username: :password: 
+    * API- 5 - endpoint : searchParent HTTP Method: GET
+    * API- 6 - endpoint : deleteParent HTTP Method: DELETE
+    
+    
+    * API  7 - endpoint : createTeacher HTTP Method: PUT/POST  -> API KEY  (key is valida for a single day)
+    * API- 8 - endpoint : searchTeacher HTTP Method: GET
+    * API- 9 - endpoint : deleteTeacher HTTP Method: DELETE
+    
+    
+    * API-10 - endpoint : createDriver HTTP Method: PUT/POST  ->  NO AUTH 
+    * API-11 - endpoint : searchDriver HTTP Method: GET
+    * API-12 - endpoint : deleteDriver HTTP Method: DELETE
 
 
 ### AUTH MEHODS.
@@ -53,4 +56,24 @@
 
      CREATE DATABASE school_db
       ```   
-2. 
+2. copy the data from the below mentioned file in the next mentioned files and locations
+    
+    ```shell script
+   
+    school_management_system/external/uwsgi.conf  -->  /etc/systemd/system/uwsgi.service
+    
+    school_management_system/external/school_management_system.ini  -->   /etc/uwsgi/sites/school_management_system.ini
+   
+    
+    ```
+    Add the content of this file into the http block and we are running the port 80 which is http. 
+    ```shell script
+     school_management_system/external/nginx.conf  -->   /etc/uwsgi/sites/nginx.conf
+    ```
+   
+3. Need to create the super user accounts currently the only one in the db is 
+    
+   ```json
+     {"username": "deesh","password": "deesh"}
+    ```
+    

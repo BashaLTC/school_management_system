@@ -23,7 +23,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '!6vcf1x2c#9q%upc$!n+q%#k1w298l%3)8jyc9%&s058$9mk@j'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -31,6 +31,7 @@ ALLOWED_HOSTS = ['*']
 CORS_ORIGIN_ALLOW_ALL = False
 CORS_ORIGIN_WHITELIST = (
     'http://localhost:8081',
+    'http://api.libertytestingcenter.net',
 )
 
 # Application definition
@@ -141,3 +142,5 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 API_KEY_CUSTOM_HEADER = "HTTP_X_API_KEY"
+
+STATIC_ROOT = os.path.join(BASE_DIR, "static/")
