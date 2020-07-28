@@ -60,3 +60,19 @@ def is_token_authenticated(request):
     if api_key:
         return bool(Token.objects.filter(key=api_key.split()[-1]))
     return False
+
+
+def soap_authenticate_api_key(key):
+    if key:
+        return bool(APIKey.objects.is_valid(key))
+    return False
+
+
+def soap_token_authenticated(token):
+    if token:
+        return bool(Token.objects.filter(key=token))
+    return False
+
+
+def soap_authenticate(username, password):
+    return authenticate(username=username, password=password)
