@@ -1,283 +1,210 @@
-from django.views import View
-from dicttoxml import dicttoxml
-from rest_framework import status
-from django.http.response import HttpResponse
-from xmltodict import parse as xml_to_dict_parse
-from django.core.files.temp import NamedTemporaryFile
+import logging
 
-from utils.util import decide_the_message
+from spyne import (Application, rpc, ServiceBase, Integer, Unicode)
+from spyne import (Iterable, AnyDict)
+from spyne.protocol.http import HttpRpc
+from spyne.protocol.soap import Soap11
+from spyne.server.django import DjangoApplication
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth import authenticate
+
 from rest_api.models import (StudentDetails, TeacherDetails, ParentsDetails, DriverDetails)
-from school_management_system.config import (MAX_QUERY_RESULT_LIMIT, XML_LOCATION, GIF_LOCATION)
-from school_management_system.authentications import (authenticate_user, authenticate_api_key, is_token_authenticated)
+from school_management_system.config import MAX_QUERY_RESULT_LIMIT
+from school_management_system.authentications import (soap_authenticate, soap_authenticate_api_key, soap_token_authenticated)
 from rest_api.serializers import (StudentDetailsSerializer, TeacherDetailsSerializer, ParentsDetailsSerializer, DriverDetailsSerializer)
 
-
-class CreateStudent(View):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def post(self, request):
-        if is_token_authenticated(request):
-            data = request.body.decode('utf-8')
-            xml_data = {i: j for i, j in xml_to_dict_parse(data).get('data').items()}
-            student_serializer = StudentDetailsSerializer(data=xml_data)
-            if student_serializer.is_valid():
-                student_serializer.save()
-                success_message = decide_the_message(student_serializer.data, open(XML_LOCATION + 'created.xml').read())
-                return HttpResponse(success_message, status=status.HTTP_201_CREATED)
-            error_message = decide_the_message(student_serializer.errors, open(XML_LOCATION + 'not_created.xml').read())
-            return HttpResponse(error_message, status=status.HTTP_400_BAD_REQUEST)
-        return HttpResponse(status=status.HTTP_401_UNAUTHORIZED)
-
-    def put(self, request):
-        return self.post(request)
+# logging.basicConfig(level=logging.DEBUG)
 
 
-class SearchStudent(View):
-    """
-    ?name=<value>
-    """
+class CreateStudent(ServiceBase):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def get(self, request):
-        if is_token_authenticated(request):
-            student_details = StudentDetails.objects.all()[:MAX_QUERY_RESULT_LIMIT].values()
-            data = request.body.decode('utf-8')
-            if data:
-                xml_data = {i: j for i, j in xml_to_dict_parse(data).get('data').items()}
-                name = xml_data.get('name', None)
-                if name is not None:
-                    student_details = StudentDetails.objects.filter(student_name__icontains=name)[:MAX_QUERY_RESULT_LIMIT].values()
-            student_details = [i for i in student_details]
-            dict_xml_data = dicttoxml(student_details).decode('utf-8')
-            file_name = NamedTemporaryFile(delete=True)
-            with open(file_name.name, 'w') as f:
-                f.write(dict_xml_data)
-            return HttpResponse(open(file_name.name).read(), content_type='text/xml')
-        return HttpResponse(status=status.HTTP_401_UNAUTHORIZED)
-
-
-class DeleteStudent(View):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def delete(self, request):
-        if is_token_authenticated(request):
-            data = request.body.decode('utf-8')
-            if data:
-                xml_data = {i: j for i, j in xml_to_dict_parse(data).get('data').items()}
-                name = xml_data.get('name', None)
-                if name is not None:
-                    delete_value = StudentDetails.objects.filter(student_name=name).delete()
-                    if delete_value[0]:
-                        return HttpResponse(open(XML_LOCATION + 'deleted.xml').read(), content_type='text/xml', status=status.HTTP_204_NO_CONTENT)
-            return HttpResponse(open(XML_LOCATION + 'not_deleted.xml').read(), content_type='text/xml', status=status.HTTP_400_BAD_REQUEST)
-        return HttpResponse(status=status.HTTP_401_UNAUTHORIZED)
+    @rpc(Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, _returns=Iterable(AnyDict))
+    def create_student(ctx, token, student_name, age, class_name, section, blood_group, parent_name, parent_phone_number, class_teacher, favourite_sport, favourite_subject):
+        if soap_token_authenticated(token):
+            data = dict(
+                student_name=student_name,
+                age=age,
+                class_name=class_name,
+                section=section,
+                blood_group=blood_group,
+                parent_name=parent_name,
+                parent_phone_number=parent_phone_number,
+                class_teacher=class_teacher,
+                favourite_sport=favourite_sport,
+                favourite_subject=favourite_subject,
+            )
+            tutorial_serializer = StudentDetailsSerializer(data=data)
+            if tutorial_serializer.is_valid():
+                tutorial_serializer.save()
+                return [{"Status": 'OK'}]
+            return [tutorial_serializer.errors]
+        return [{'token': "invalid"}]
 
 
-class CreateParent(View):
+class SearchStudent(ServiceBase):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def post(self, request):
-        if authenticate_user(request):
-            data = request.body.decode('utf-8')
-            xml_data = {i: j for i, j in xml_to_dict_parse(data).get('data').items()}
-            parent_serializer = ParentsDetailsSerializer(data=xml_data)
-            if parent_serializer.is_valid():
-                parent_serializer.save()
-                success_message = decide_the_message(parent_serializer.data, open(XML_LOCATION + 'created.xml').read())
-                return HttpResponse(success_message, status=status.HTTP_201_CREATED)
-            error_message = decide_the_message(parent_serializer.errors, open(XML_LOCATION + 'not_created.xml').read())
-            return HttpResponse(error_message, status=status.HTTP_400_BAD_REQUEST)
-        return HttpResponse({'error': True}, status=status.HTTP_401_UNAUTHORIZED)
-
-    def put(self, request):
-        return self.post(request)
+    @rpc(Unicode, Unicode, _returns=Iterable(AnyDict))
+    def search_student(ctx, token, name):
+        if soap_token_authenticated(token):
+            if name:
+                data = StudentDetails.objects.filter(student_name=name).values()
+                if data:
+                    return [{i: j} for i, j in data[0].items()]
+            return []
+        return [{'token': "invalid"}]
 
 
-class SearchParent(View):
-    """
-    ?name=<value>
-    """
+class DeleteStudent(ServiceBase):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def get(self, request):
-        if authenticate_user(request):
-            parent_details = ParentsDetails.objects.all()[:MAX_QUERY_RESULT_LIMIT].values()
-            data = request.body.decode('utf-8')
-            if data:
-                xml_data = {i: j for i, j in xml_to_dict_parse(data).get('data').items()}
-                name = xml_data.get('name', None)
-                if name is not None:
-                    parent_details = ParentsDetails.objects.filter(parent_name__icontains=name)[:MAX_QUERY_RESULT_LIMIT].values()
-            parent_details = [i for i in parent_details]
-            dict_xml_data = dicttoxml(parent_details).decode('utf-8')
-            file_name = NamedTemporaryFile(delete=True)
-            with open(file_name.name, 'w') as f:
-                f.write(dict_xml_data)
-            return HttpResponse(open(file_name.name).read(), content_type='text/xml')
-        return HttpResponse(status=status.HTTP_401_UNAUTHORIZED)
-
-
-class DeleteParent(View):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def delete(self, request):
-        if authenticate_user(request):
-            data = request.body.decode('utf-8')
-            if data:
-                xml_data = {i: j for i, j in xml_to_dict_parse(data).get('data').items()}
-                name = xml_data.get('name', None)
-                if name is not None:
-                    delete_value = ParentsDetails.objects.filter(parent_name=name).delete()
-                    if delete_value[0]:
-                        return HttpResponse(open(XML_LOCATION + 'deleted.xml').read(), content_type='text/xml', status=status.HTTP_204_NO_CONTENT)
-            return HttpResponse(open(XML_LOCATION + 'not_deleted.xml').read(), content_type='text/xml', status=status.HTTP_400_BAD_REQUEST)
-        return HttpResponse(status=status.HTTP_401_UNAUTHORIZED)
-
-
-class CreateTeacher(View):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def post(self, request):
-        if authenticate_api_key(request):
-            data = request.body.decode('utf-8')
-            xml_data = {i: j for i, j in xml_to_dict_parse(data).get('data').items()}
-            teacher_serializer = TeacherDetailsSerializer(data=xml_data)
-            if teacher_serializer.is_valid():
-                teacher_serializer.save()
-                success_message = decide_the_message(teacher_serializer.data, open(XML_LOCATION + 'created.xml').read())
-                return HttpResponse(success_message, status=status.HTTP_201_CREATED)
-            error_message = decide_the_message(teacher_serializer.errors, open(XML_LOCATION + 'not_created.xml').read())
-            return HttpResponse(error_message, status=status.HTTP_400_BAD_REQUEST)
-        return HttpResponse(status=status.HTTP_401_UNAUTHORIZED)
-
-    def put(self, request):
-        return self.post(request)
-
-
-class SearchTeacher(View):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def get(self, request):
-        if authenticate_api_key(request):
-            teacher_details = TeacherDetails.objects.all()[:MAX_QUERY_RESULT_LIMIT].values()
-            data = request.body.decode('utf-8')
-            if data:
-                xml_data = {i: j for i, j in xml_to_dict_parse(data).get('data').items()}
-                name = xml_data.get('name', None)
-                if name is not None:
-                    teacher_details = TeacherDetails.objects.filter(teacher_name__icontains=name)[:MAX_QUERY_RESULT_LIMIT].values()
-            teacher_details = [i for i in teacher_details]
-            dict_xml_data = dicttoxml(teacher_details).decode('utf-8')
-            file_name = NamedTemporaryFile(delete=True)
-            with open(file_name.name, 'w') as f:
-                f.write(dict_xml_data)
-            return HttpResponse(open(file_name.name).read(), content_type='text/xml')
-        return HttpResponse(status=status.HTTP_401_UNAUTHORIZED)
-
-
-class DeleteTeacher(View):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def delete(self, request):
-        if authenticate_api_key(request):
-            data = request.body.decode('utf-8')
-            if data:
-                xml_data = {i: j for i, j in xml_to_dict_parse(data).get('data').items()}
-                name = xml_data.get('name', None)
-                if name is not None:
-                    delete_value = TeacherDetails.objects.filter(teacher_name=name).delete()
-                    if delete_value[0]:
-                        return HttpResponse(open(XML_LOCATION + 'deleted.xml').read(), content_type='text/xml', status=status.HTTP_204_NO_CONTENT)
-            return HttpResponse(open(XML_LOCATION + 'not_deleted.xml').read(), content_type='text/xml', status=status.HTTP_400_BAD_REQUEST)
-        return HttpResponse(status=status.HTTP_401_UNAUTHORIZED)
-
-
-class CreateDriver(View):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def post(self, request):
-        data = request.body.decode('utf-8')
-        xml_data = {i: j for i, j in xml_to_dict_parse(data).get('data').items()}
-        driver_serializer = DriverDetailsSerializer(data=xml_data)
-        if driver_serializer.is_valid():
-            driver_serializer.save()
-            success_message = decide_the_message(driver_serializer.data, open(XML_LOCATION + 'created.xml').read())
-            return HttpResponse(success_message, status=status.HTTP_201_CREATED)
-        error_message = decide_the_message(driver_serializer.errors, open(XML_LOCATION + 'not_created.xml').read())
-        return HttpResponse(error_message, status=status.HTTP_400_BAD_REQUEST)
-
-    def put(self, request):
-        return self.post(request)
-
-
-class SearchDriver(View):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def get(self, request):
-        driver_details = DriverDetails.objects.all()[:MAX_QUERY_RESULT_LIMIT].values()
-        data = request.body.decode('utf-8')
-        if data:
-            xml_data = {i: j for i, j in xml_to_dict_parse(data).get('data').items()}
-            name = xml_data.get('name', None)
-            if name is not None:
-                driver_details = DriverDetails.objects.filter(driver_name__icontains=name)[:MAX_QUERY_RESULT_LIMIT].values()
-        driver_details = [i for i in driver_details]
-        dict_xml_data = dicttoxml(driver_details).decode('utf-8')
-        file_name = NamedTemporaryFile(delete=True)
-        with open(file_name.name, 'w') as f:
-            f.write(dict_xml_data)
-        return HttpResponse(open(file_name.name).read(), content_type='text/xml')
-
-
-class DeleteDriver(View):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def delete(self, request):
-        data = request.body.decode('utf-8')
-        if data:
-            xml_data = {i: j for i, j in xml_to_dict_parse(data).get('data').items()}
-            name = xml_data.get('name', None)
-            if name is not None:
-                delete_value = DriverDetails.objects.filter(driver_name=name).delete()
+    @rpc(Unicode, Unicode, _returns=Iterable(AnyDict))
+    def delete_student(ctx, token, name):
+        if soap_token_authenticated(token):
+            if name:
+                delete_value = StudentDetails.objects.filter(student_name=name).delete()
                 if delete_value[0]:
-                    return HttpResponse(open(XML_LOCATION + 'deleted.xml').read(), content_type='text/xml', status=status.HTTP_204_NO_CONTENT)
-        return HttpResponse(open(XML_LOCATION + 'not_deleted.xml').read(), content_type='text/xml', status=status.HTTP_400_BAD_REQUEST)
+                    return [{'deleted': True}]
+            return []
+        return [{'token': "invalid"}]
 
 
-class HomeView(View):
-    def get(self, request):
-        image_data = open(GIF_LOCATION + '404_page_not_found.gif', "rb").read()
-        return HttpResponse(image_data, content_type="image/png", status=status.HTTP_404_NOT_FOUND)
+class CreateParent(ServiceBase):
 
-    def post(self, request):
-        return self.get(request)
+    @rpc(Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, _returns=Iterable(AnyDict))
+    def create_parent(ctx, username, password, parent_name, student_name, age, blood_group, educational_qualification, address, phone_number):
+        if soap_authenticate(username=username, password=password):
+            data = dict(
+                parent_name=parent_name,
+                student_name=student_name,
+                age=age,
+                blood_group=blood_group,
+                educational_qualification=educational_qualification,
+                address=address,
+                phone_number=phone_number,
+            )
+            tutorial_serializer = ParentsDetailsSerializer(data=data)
+            if tutorial_serializer.is_valid():
+                tutorial_serializer.save()
+                return [{"Status": 'OK'}]
+            return [tutorial_serializer.errors]
+        return [{'credentials': "invalid"}]
 
-    def put(self, request):
-        return self.get(request)
 
-    def delete(self, request):
-        return self.get(request)
+class SearchParent(ServiceBase):
+
+    @rpc(Unicode, Unicode, Unicode, _returns=Iterable(AnyDict))
+    def search_teacher(ctx, username, password, name):
+        if soap_authenticate(username=username, password=password):
+            if name:
+                data = ParentsDetails.objects.filter(parent_name=name).values()
+                if data:
+                    return [{i: j} for i, j in data[0].items()]
+                return []
+        return [{'credentials': "invalid"}]
+
+
+class DeleteParent(ServiceBase):
+
+    @rpc(Unicode, Unicode, Unicode, _returns=Iterable(AnyDict))
+    def delete_teacher(ctx, username, password, name):
+        if soap_authenticate(username=username, password=password):
+            if name:
+                delete_value = ParentsDetails.objects.filter(parent_name=name).delete()
+                if delete_value[0]:
+                    return [{'deleted': True}]
+            return []
+        return [{'credentials': "invalid"}]
+
+
+class CreateTeacher(ServiceBase):
+
+    @rpc(Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, _returns=Iterable(AnyDict))
+    def create_driver(ctx, api_key, teacher_name, age, phone_number, address, head_of_class, subject, years_of_experience, educational_qualification, complaints):
+        if soap_authenticate_api_key(api_key):
+            data = dict(
+                teacher_name=teacher_name,
+                age=age,
+                phone_number=phone_number,
+                address=address,
+                head_of_class=head_of_class,
+                subject=subject,
+                years_of_experience=years_of_experience,
+                educational_qualification=educational_qualification,
+                complaints=complaints,
+            )
+            tutorial_serializer = TeacherDetailsSerializer(data=data)
+            if tutorial_serializer.is_valid():
+                tutorial_serializer.save()
+                return [{"Status": 'OK'}]
+            return [tutorial_serializer.errors]
+        return [{'key': "invalid"}]
+
+
+class SearchTeacher(ServiceBase):
+
+    @rpc(Unicode, Unicode, _returns=Iterable(AnyDict))
+    def search_teacher(ctx, api_key, name):
+        if soap_authenticate_api_key(api_key):
+            if name:
+                data = TeacherDetails.objects.filter(teacher_name=name).values()
+                if data:
+                    return [{i: j} for i, j in data[0].items()]
+                return []
+        return [{'key': "invalid"}]
+
+
+class DeleteTeacher(ServiceBase):
+
+    @rpc(Unicode, Unicode, _returns=Iterable(AnyDict))
+    def delete_teacher(ctx, api_key, name):
+        if soap_authenticate_api_key(api_key):
+            if name:
+                delete_value = TeacherDetails.objects.filter(teacher_name=name).delete()
+                if delete_value[0]:
+                    return [{'deleted': True}]
+            return []
+        return [{'key': "invalid"}]
+
+
+class CreateDriver(ServiceBase):
+
+    @rpc(Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, _returns=Iterable(AnyDict))
+    def create_driver(ctx, driver_name, age, phone_number, address, lic_no, experience, complaints, route):
+        data = dict(
+            driver_name=driver_name,
+            age=age,
+            phone_number=phone_number,
+            address=address,
+            lic_no=lic_no,
+            experience=experience,
+            complaints=complaints,
+            route=route,
+        )
+        tutorial_serializer = DriverDetailsSerializer(data=data)
+        if tutorial_serializer.is_valid():
+            tutorial_serializer.save()
+            return [{"Status": 'OK'}]
+        return [tutorial_serializer.errors]
+
+
+class SearchDriver(ServiceBase):
+
+    @rpc(Unicode, _returns=Iterable(AnyDict))
+    def search_driver(ctx, name=None):
+        if name:
+            data = DriverDetails.objects.filter(driver_name=name).values()
+            if data:
+                return [{i: j} for i, j in data[0].items()]
+            return []
+
+
+class DeleteDriver(ServiceBase):
+
+    @rpc(Unicode, _returns=Iterable(AnyDict))
+    def delete_driver(ctx, name=None):
+        if name:
+            delete_value = DriverDetails.objects.filter(driver_name=name).delete()
+            if delete_value[0]:
+                return [{'deleted': True}]
+        return []
+
+

@@ -1,30 +1,27 @@
 from django.urls import path
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.cache import never_cache
-from rest_framework.urlpatterns import format_suffix_patterns
-from soap_api.views import (CreateStudent, SearchStudent, DeleteStudent, CreateParent, SearchParent, DeleteParent, CreateTeacher, SearchTeacher, DeleteTeacher,
-                            CreateDriver, SearchDriver, DeleteDriver)
+
+from utils.soap_utils import register_the_view_in_soap
+from soap_api.views import (SearchStudent, DeleteStudent, SearchParent, DeleteParent, SearchTeacher, DeleteTeacher, SearchDriver, DeleteDriver, CreateDriver, CreateStudent, CreateParent, CreateTeacher)
 
 urlpatterns = [
-    # Student endpoints
-    path(r'soap_api/create_student', never_cache(csrf_exempt(CreateStudent.as_view()))),
-    path(r'soap_api/search_student', never_cache(csrf_exempt(SearchStudent.as_view()))),
-    path(r'soap_api/delete_student', never_cache(csrf_exempt(DeleteStudent.as_view()))),
+    # student
+    path(r'soap_api/create_student/', never_cache(register_the_view_in_soap(CreateStudent))),
+    path(r'soap_api/search_student/', never_cache(register_the_view_in_soap(SearchStudent))),
+    path(r'soap_api/delete_student/', never_cache(register_the_view_in_soap(DeleteStudent))),
 
-    # Parent endpoints
-    path(r'soap_api/create_parent', never_cache(csrf_exempt(CreateParent.as_view()))),
-    path(r'soap_api/search_parent', never_cache(csrf_exempt(SearchParent.as_view()))),
-    path(r'soap_api/delete_parent', never_cache(csrf_exempt(DeleteParent.as_view()))),
+    # parent
+    path(r'soap_api/create_parent/', register_the_view_in_soap(CreateParent)),
+    path(r'soap_api/search_parent/', register_the_view_in_soap(SearchParent)),
+    path(r'soap_api/delete_parent/', register_the_view_in_soap(DeleteParent)),
 
-    # Teacher endpoints
-    path(r'soap_api/create_teacher', never_cache(csrf_exempt(CreateTeacher.as_view()))),
-    path(r'soap_api/search_teacher', never_cache(csrf_exempt(SearchTeacher.as_view()))),
-    path(r'soap_api/delete_teacher', never_cache(csrf_exempt(DeleteTeacher.as_view()))),
+    # teacher
+    path(r'soap_api/create_teacher/', register_the_view_in_soap(CreateTeacher)),
+    path(r'soap_api/search_teacher/', register_the_view_in_soap(SearchTeacher)),
+    path(r'soap_api/delete_teacher/', register_the_view_in_soap(DeleteTeacher)),
 
-    # Driver endpoints
-    path(r'soap_api/create_driver', never_cache(csrf_exempt(CreateDriver.as_view()))),
-    path(r'soap_api/search_driver', never_cache(csrf_exempt(SearchDriver.as_view()))),
-    path(r'soap_api/delete_driver', never_cache(csrf_exempt(DeleteDriver.as_view()))),
+    # driver
+    path(r'soap_api/create_driver/', register_the_view_in_soap(CreateDriver)),
+    path(r'soap_api/search_driver/', register_the_view_in_soap(SearchDriver)),
+    path(r'soap_api/delete_driver/', register_the_view_in_soap(DeleteDriver))
 ]
-
-urlpatterns = format_suffix_patterns(urlpatterns)
