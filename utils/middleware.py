@@ -18,8 +18,8 @@ class MethodNotAllowedMiddleware:
                                                           f'cannot be used with the Agent API.'})
                 return JsonResponse(final_response, safe=False, status=response.status_code)
 
-        elif response.get('Content-Type', 'text/html; charset=utf-8') == 'text/html; charset=utf-8':
-            if response.status_code in [401, 403, 404, 405, 409, 500, 5003]:
-                return HttpResponse(open(XML_LOCATION + f'{response.status_code}.xml').read(), content_type='text/xml', status=response.status_code)
+        # elif response.get('Content-Type', 'text/html; charset=utf-8') == 'text/html; charset=utf-8':
+        #     if response.status_code in [401, 403, 404, 405, 409, 500, 5003]:
+        #         return HttpResponse(open(XML_LOCATION + f'{response.status_code}.xml').read(), content_type='text/xml', status=response.status_code)
 
         return response
