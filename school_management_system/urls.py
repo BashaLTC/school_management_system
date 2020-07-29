@@ -4,7 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.cache import never_cache
 from rest_framework.authtoken.views import obtain_auth_token
 
-from soap_api.views import HomeView
+from soap_api.views import HomeView, PingPong
 from school_management_system.authentications import ApiTokenGenerator
 
 urlpatterns = [
@@ -14,4 +14,5 @@ urlpatterns = [
     path(r'get_auth_token', obtain_auth_token, name='get_auth_token'),
     path(r'get_api_token', csrf_exempt(never_cache(ApiTokenGenerator.as_view())), name='get_auth_token'),
     path(r'', csrf_exempt(never_cache(HomeView.as_view())), name=''),
+    path(r'ping', csrf_exempt(never_cache(PingPong.as_view())), name='get_auth_token'),
 ]

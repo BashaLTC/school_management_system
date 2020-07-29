@@ -215,3 +215,18 @@ class HomeView(View):
 
     def delete(self, request):
         return self.get(request)
+
+
+class PingPong(View):
+
+    def get(self, request):
+        return HttpResponse("Pong")
+
+    def post(self, request):
+        return self.get(request)
+
+    def put(self, request):
+        return self.get(request)
+
+    def delete(self, request):
+        return self.get(request)
