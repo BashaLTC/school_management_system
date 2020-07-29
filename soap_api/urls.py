@@ -1,8 +1,11 @@
 from django.urls import path
 from django.views.decorators.cache import never_cache
-
+from spyne.server.django import DjangoView
+from spyne.protocol.soap import Soap11
+from school_management_system.config import API_NAME
 from utils.soap_utils import register_the_view_in_soap
-from soap_api.views import (SearchStudent, DeleteStudent, SearchParent, DeleteParent, SearchTeacher, DeleteTeacher, SearchDriver, DeleteDriver, CreateDriver, CreateStudent, CreateParent, CreateTeacher)
+from soap_api.views import (SearchStudent, DeleteStudent, SearchParent, DeleteParent, SearchTeacher, DeleteTeacher, SearchDriver, DeleteDriver, CreateDriver, CreateStudent,
+                            CreateParent, CreateTeacher)
 
 urlpatterns = [
     # student
@@ -22,6 +25,13 @@ urlpatterns = [
 
     # driver
     path(r'soap_api/create_driver/', register_the_view_in_soap(CreateDriver)),
+    path(r'soap_api/delete_driver/', register_the_view_in_soap(DeleteDriver)),
     path(r'soap_api/search_driver/', register_the_view_in_soap(SearchDriver)),
-    path(r'soap_api/delete_driver/', register_the_view_in_soap(DeleteDriver))
+
+    path(r'soap_api/', DjangoView.as_view(
+        services=[CreateStudent, SearchStudent, DeleteStudent, CreateParent, SearchParent, DeleteParent, CreateTeacher, SearchTeacher, DeleteTeacher, CreateDriver, DeleteDriver,
+                  SearchDriver],
+        tns=API_NAME,
+        in_protocol=Soap11(validator='lxml'),
+        out_protocol=Soap11())),
 ]

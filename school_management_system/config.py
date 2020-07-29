@@ -5,6 +5,7 @@ API_KEY_EXPIRY_HOURS = 24           # in hours
 
 XML_LOCATION = BASE_DIR + '/utils/xml_responses/'
 GIF_LOCATION = BASE_DIR + '/utils/gif_image_location/'
+API_NAME = 'api.libertytechnologies.com'
 
 REST_MIDDLEWARE_CONFIG = {
 

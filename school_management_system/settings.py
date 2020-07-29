@@ -29,9 +29,12 @@ ALLOWED_HOSTS = ['*']
 
 # CORS
 CORS_ORIGIN_ALLOW_ALL = False
+
+from school_management_system.config import API_NAME
+
 CORS_ORIGIN_WHITELIST = (
     'http://localhost:8081',
-    'http://api.libertytestingcenter.net',
+    f'http://{API_NAME}',
 )
 
 # Application definition

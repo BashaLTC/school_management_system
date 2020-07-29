@@ -62,17 +62,30 @@ def is_token_authenticated(request):
     return False
 
 
-def soap_authenticate_api_key(key):
-    if key:
-        return bool(APIKey.objects.is_valid(key))
-    return False
+def soap_authenticate_api_key(ctx):
+    try:
+        key = ctx.transport.req.META.get('HTTP_APIKEY', '')
+        if key:
+            return bool(APIKey.objects.is_valid(key))
+        return False
+    except Exception as err:
+        return False
 
 
-def soap_token_authenticated(token):
-    if token:
-        return bool(Token.objects.filter(key=token))
-    return False
+def soap_token_authenticated(ctx):
+    try:
+        token = ctx.transport.req.META.get('HTTP_TOKEN', '')
+        if token:
+            return bool(Token.objects.filter(key=token))
+        return False
+    except Exception as err:
+        return False
 
 
-def soap_authenticate(username, password):
-    return authenticate(username=username, password=password)
+def soap_authenticate(ctx):
+    try:
+        username = ctx.transport.req.META.get('HTTP_USERNAME', '')
+        password = ctx.transport.req.META.get('HTTP_PASSWORD', '')
+        return authenticate(username=username, password=password)
+    except Exception as err:
+        return False

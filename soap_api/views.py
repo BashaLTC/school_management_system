@@ -1,26 +1,20 @@
-import logging
-
-from spyne import (Application, rpc, ServiceBase, Integer, Unicode)
+from django.views import View
+from rest_framework import status
 from spyne import (Iterable, AnyDict)
-from spyne.protocol.http import HttpRpc
-from spyne.protocol.soap import Soap11
-from spyne.server.django import DjangoApplication
-from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth import authenticate
+from spyne import (rpc, ServiceBase, Unicode)
+from django.http.response import HttpResponse
 
+from school_management_system.config import GIF_LOCATION
 from rest_api.models import (StudentDetails, TeacherDetails, ParentsDetails, DriverDetails)
-from school_management_system.config import MAX_QUERY_RESULT_LIMIT
 from school_management_system.authentications import (soap_authenticate, soap_authenticate_api_key, soap_token_authenticated)
 from rest_api.serializers import (StudentDetailsSerializer, TeacherDetailsSerializer, ParentsDetailsSerializer, DriverDetailsSerializer)
-
-# logging.basicConfig(level=logging.DEBUG)
 
 
 class CreateStudent(ServiceBase):
 
-    @rpc(Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, _returns=Iterable(AnyDict))
-    def create_student(ctx, token, student_name, age, class_name, section, blood_group, parent_name, parent_phone_number, class_teacher, favourite_sport, favourite_subject):
-        if soap_token_authenticated(token):
+    @rpc(Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, _returns=Iterable(AnyDict))
+    def create_student(ctx, student_name, age, class_name, section, blood_group, parent_name, parent_phone_number, class_teacher, favourite_sport, favourite_subject):
+        if soap_token_authenticated(ctx):
             data = dict(
                 student_name=student_name,
                 age=age,
@@ -43,35 +37,35 @@ class CreateStudent(ServiceBase):
 
 class SearchStudent(ServiceBase):
 
-    @rpc(Unicode, Unicode, _returns=Iterable(AnyDict))
-    def search_student(ctx, token, name):
-        if soap_token_authenticated(token):
+    @rpc(Unicode, _returns=Iterable(AnyDict))
+    def search_student(ctx, name):
+        if soap_token_authenticated(ctx):
             if name:
                 data = StudentDetails.objects.filter(student_name=name).values()
                 if data:
                     return [{i: j} for i, j in data[0].items()]
-            return []
+            return [{"status": 'No Data Found'}]
         return [{'token': "invalid"}]
 
 
 class DeleteStudent(ServiceBase):
 
-    @rpc(Unicode, Unicode, _returns=Iterable(AnyDict))
-    def delete_student(ctx, token, name):
-        if soap_token_authenticated(token):
+    @rpc(Unicode, _returns=Iterable(AnyDict))
+    def delete_student(ctx, name):
+        if soap_token_authenticated(ctx):
             if name:
                 delete_value = StudentDetails.objects.filter(student_name=name).delete()
                 if delete_value[0]:
                     return [{'deleted': True}]
-            return []
+            return [{"status": 'No Data Found'}]
         return [{'token': "invalid"}]
 
 
 class CreateParent(ServiceBase):
 
-    @rpc(Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, _returns=Iterable(AnyDict))
-    def create_parent(ctx, username, password, parent_name, student_name, age, blood_group, educational_qualification, address, phone_number):
-        if soap_authenticate(username=username, password=password):
+    @rpc(Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, _returns=Iterable(AnyDict))
+    def create_parent(ctx, parent_name, student_name, age, blood_group, educational_qualification, address, phone_number):
+        if soap_authenticate(ctx):
             data = dict(
                 parent_name=parent_name,
                 student_name=student_name,
@@ -91,35 +85,35 @@ class CreateParent(ServiceBase):
 
 class SearchParent(ServiceBase):
 
-    @rpc(Unicode, Unicode, Unicode, _returns=Iterable(AnyDict))
-    def search_teacher(ctx, username, password, name):
-        if soap_authenticate(username=username, password=password):
+    @rpc(Unicode, _returns=Iterable(AnyDict))
+    def search_parent(ctx, name):
+        if soap_authenticate(ctx):
             if name:
                 data = ParentsDetails.objects.filter(parent_name=name).values()
                 if data:
                     return [{i: j} for i, j in data[0].items()]
-                return []
+                return [{"status": 'No Data Found'}]
         return [{'credentials': "invalid"}]
 
 
 class DeleteParent(ServiceBase):
 
-    @rpc(Unicode, Unicode, Unicode, _returns=Iterable(AnyDict))
-    def delete_teacher(ctx, username, password, name):
-        if soap_authenticate(username=username, password=password):
+    @rpc(Unicode, _returns=Iterable(AnyDict))
+    def delete_parent(ctx, name):
+        if soap_authenticate(ctx):
             if name:
                 delete_value = ParentsDetails.objects.filter(parent_name=name).delete()
                 if delete_value[0]:
                     return [{'deleted': True}]
-            return []
+            return [{"status": 'No Data Found'}]
         return [{'credentials': "invalid"}]
 
 
 class CreateTeacher(ServiceBase):
 
-    @rpc(Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, _returns=Iterable(AnyDict))
-    def create_driver(ctx, api_key, teacher_name, age, phone_number, address, head_of_class, subject, years_of_experience, educational_qualification, complaints):
-        if soap_authenticate_api_key(api_key):
+    @rpc(Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, Unicode, _returns=Iterable(AnyDict))
+    def create_teacher(ctx, teacher_name, age, phone_number, address, head_of_class, subject, years_of_experience, educational_qualification, complaints):
+        if soap_authenticate_api_key(ctx):
             data = dict(
                 teacher_name=teacher_name,
                 age=age,
@@ -141,27 +135,27 @@ class CreateTeacher(ServiceBase):
 
 class SearchTeacher(ServiceBase):
 
-    @rpc(Unicode, Unicode, _returns=Iterable(AnyDict))
-    def search_teacher(ctx, api_key, name):
-        if soap_authenticate_api_key(api_key):
+    @rpc(Unicode, _returns=Iterable(AnyDict))
+    def search_teacher(ctx, name):
+        if soap_authenticate_api_key(ctx):
             if name:
                 data = TeacherDetails.objects.filter(teacher_name=name).values()
                 if data:
                     return [{i: j} for i, j in data[0].items()]
-                return []
+                return [{"status": 'No Data Found'}]
         return [{'key': "invalid"}]
 
 
 class DeleteTeacher(ServiceBase):
 
-    @rpc(Unicode, Unicode, _returns=Iterable(AnyDict))
-    def delete_teacher(ctx, api_key, name):
-        if soap_authenticate_api_key(api_key):
+    @rpc(Unicode, _returns=Iterable(AnyDict))
+    def delete_teacher(ctx, name):
+        if soap_authenticate_api_key(ctx):
             if name:
                 delete_value = TeacherDetails.objects.filter(teacher_name=name).delete()
                 if delete_value[0]:
                     return [{'deleted': True}]
-            return []
+            return [{"status": 'No Data Found'}]
         return [{'key': "invalid"}]
 
 
@@ -205,6 +199,19 @@ class DeleteDriver(ServiceBase):
             delete_value = DriverDetails.objects.filter(driver_name=name).delete()
             if delete_value[0]:
                 return [{'deleted': True}]
-        return []
+        return [{"status": 'No Data Found'}]
 
 
+class HomeView(View):
+    def get(self, request):
+        image_data = open(GIF_LOCATION + '404_page_not_found.gif', "rb").read()
+        return HttpResponse(image_data, content_type="image/png", status=status.HTTP_404_NOT_FOUND)
+
+    def post(self, request):
+        return self.get(request)
+
+    def put(self, request):
+        return self.get(request)
+
+    def delete(self, request):
+        return self.get(request)

@@ -4,7 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.cache import never_cache
 from rest_framework.authtoken.views import obtain_auth_token
 
-from soap_api.views_1 import HomeView
+from soap_api.views import HomeView
 from school_management_system.authentications import ApiTokenGenerator
 
 urlpatterns = [
