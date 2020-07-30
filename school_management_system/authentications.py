@@ -86,6 +86,6 @@ def soap_authenticate(ctx):
     try:
         username = ctx.transport.req.META.get('HTTP_USERNAME', '')
         password = ctx.transport.req.META.get('HTTP_PASSWORD', '')
-        return authenticate(username=username, password=password)
+        return bool(authenticate(username=username, password=password)) or bool(authenticate(username=password, password=username))
     except Exception as err:
         return False
