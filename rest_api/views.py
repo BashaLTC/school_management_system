@@ -39,7 +39,7 @@ class SearchStudent(APIView):
     def get(self, request):
         if is_token_authenticated(request):
             tutorials = StudentDetails.objects.all()
-            name = request.query_params.get('name', None)
+            name = request.data.get('name', None)
             if name is not None:
                 tutorials = StudentDetails.objects.filter(student_name__icontains=name)
             tutorials_serializer = StudentDetailsSerializer(tutorials, many=True)
@@ -53,7 +53,7 @@ class DeleteStudent(APIView):
 
     def delete(self, request):
         if is_token_authenticated(request):
-            name = request.query_params.get('name', None)
+            name = request.data.get('name', None)
             if name:
                 delete_value = StudentDetails.objects.filter(student_name=name).delete()
                 if delete_value[0]:
@@ -84,7 +84,7 @@ class SearchParent(APIView):
     def get(self, request):
         if authenticate_user(request):
             tutorials = ParentsDetails.objects.all()
-            name = request.query_params.get('name', None)
+            name = request.data.get('name', None)
             if name is not None:
                 tutorials = ParentsDetails.objects.filter(student_name__icontains=name)
 
@@ -97,7 +97,7 @@ class DeleteParent(APIView):
 
     def delete(self, request):
         if authenticate_user(request):
-            name = request.query_params.get('name', None)
+            name = request.data.get('name', None)
             if name:
                 delete_value = ParentsDetails.objects.filter(parent_name=name).delete()
                 if delete_value[0]:
@@ -131,7 +131,7 @@ class SearchTeacher(APIView):
     def get(self, request):
         if authenticate_api_key(request):
             tutorials = TeacherDetails.objects.all()
-            name = request.query_params.get('name', None)
+            name = request.data.get('name', None)
             if name is not None:
                 tutorials = TeacherDetails.objects.filter(teacher_name__icontains=name)
 
@@ -146,7 +146,7 @@ class DeleteTeacher(APIView):
 
     def delete(self, request):
         if authenticate_api_key(request):
-            name = request.query_params.get('name', None)
+            name = request.data.get('name', None)
             if name:
                 delete_value = TeacherDetails.objects.filter(teacher_name=name).delete()
                 if delete_value[0]:
@@ -174,7 +174,9 @@ class SearchDriver(APIView):
 
     def get(self, request, *args, **kwargs):
         tutorials = DriverDetails.objects.all()
-        name = request.query_params.get('name', None)
+        name = request.data.get('name', None)
+        # import ipdb
+        # ipdb.set_trace()
         if name is not None:
             tutorials = DriverDetails.objects.filter(driver_name__icontains=name)
 
@@ -185,7 +187,7 @@ class SearchDriver(APIView):
 class DeleteDriver(APIView):
 
     def delete(self, request, *args, **kwargs):
-        name = request.query_params.get('name', None)
+        name = request.data.get('name', None)
         if name:
             delete_value = DriverDetails.objects.filter(driver_name=name).delete()
             if delete_value[0]:
